@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="p-3">
+  <div class="container">
+    <div class="row mt-3">
+      <div class="col mx-auto mb-3">
+        <h2>Edit Job</h2>
+        <hr />
+            <p class="card-text"> 
+            <form method="post">
+                {% csrf_token %}
+                    
+                <div name="EditJobForm" class="row g-2 mb-3">
+                    <div class="col-auto">
+                        <div class="input-group">
+                        <span class="input-group-text">Title</span>
+                        <input type="text" class="form-control" name="title" value="{{ template_data.editjob.title }}">
+                        </div>
+                    </div>
+
+                    <div class="col-auto">
+                        <div class="input-group">
+                        <span class="input-group-text">Skills</span>
+                        <input type="text" class="form-control" name="skills" value="{{ template_data.editjob.skills }}">
+                        </div>
+                    </div>
+
+                    <div class="col-auto">
+                        <div class="input-group">
+                        <span class="input-group-text">Location</span>
+                        <input type="text" class="form-control" name="location" value="{{ template_data.editjob.location }}">
+                        </div>
+                    </div>
+
+                    <div class="col-auto">
+                        <div class="input-group">
+                        <span class="input-group-text">Salary Range</span>
+                        <input type="text" class="form-control" name="salaryrange" value="{{ template_data.editjob.salaryRange }}">
+                        </div>
+                    </div>
+
+                    <div class="col-auto">
+                        <div class="input-group">
+                        <span class="input-group-text">Remote/Onsite</span>
+                        <input type="text" class="form-control" name="remote" value="{{ template_data.editjob.remote }}">
+                        </div>
+                    </div>
+
+                    <div class="col-auto">
+                        <div class="input-group">
+                        <span class="input-group-text">Visa Sponsorship</span>
+                        <input type="text" class="form-control" name="visa" value="{{ template_data.editjob.visaSponsorship }}">
+                        </div>
+                    </div>
+                    
+                    <div class="col-auto">
+                        <button class="btn bg-dark text-white" type="submit" name="updatejob" value="update"> 
+                        Update Job
+                        </button>
+                    </div>
+                    </div>
+
+                    </form>
+                    </p> 
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
