@@ -21,6 +21,19 @@
 
       <p class="card-text"> 
           <form method="GET">
+
+    <div class="row g-2 mb-3">
+        <div class="col-auto">
+          {% if template_data.role == "Recruiter" %}
+            <label>Add New Job Posting</label>
+          {% elif template_data.role == "Job Seeker" %}
+            <label>Search Job Opportunities</label>
+          {% endif %}
+        </div>
+    </div>
+
+
+
       <div class="row g-2 mb-3">
         <div class="col-auto">
             <div class="input-group">
@@ -83,8 +96,8 @@
     <div class="row">
       {% for job in template_data.jobs%}
       <div class="col-md-4 col-lg-3 mb-2">
+
         <div class="p-2 card align-items-center pt-4">
-        <!--- <img src="{{ jobs.image.url }}" class="card-img-top rounded img-card-200"> -->
           <div class="card-body text-center">
             <strong> Job Title: </strong> {{ job.title }}
           </div>
@@ -103,7 +116,14 @@
           <div class="card-body text-center">
                <strong> Visa Sponsorship </strong> {{ job.visaSponsorship}}
           </div>
+          {% if template_data.role == "Recruiter" %}
+              <a class = "btn btn-primary"
+                href = "{% url 'jobs.edit_job' id=job.id %}" >Edit
+              </a>
+            {% endif %}
         </div>
+
+
       </div>
       {% endfor %}
     </div>

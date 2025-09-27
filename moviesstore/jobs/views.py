@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404, redirect
 from .models import Job, Role
 
 '''
@@ -240,10 +240,24 @@ def index(request):
         template_data["remote"] = remote_on_site
         template_data["visa"] = visa_sponsorship
 
+    
+    
+    if template_data['role'] == "Job Seeker":
+        template_data["jobs"] = jobs_filtered
+
         
     if template_data['role'] == "Recruiter":
-        jobs_filtered = jobs
-    template_data["jobs"] = jobs_filtered
+        if title_filter and skills_filter and location_filter and salary_range and remote_on_site and visa_sponsorship:
+            if title_filter != "" and skills_filter != "" and location_filter != "" and salary_range != "" and remote_on_site != "" and visa_sponsorship != "":
+                new_job = Job()
+                new_job.title = title_filter
+                new_job.skills = skills_filter
+                new_job.location = location_filter
+                new_job.salaryRange = salary_range
+                new_job.remote = remote_on_site
+                new_job.visaSponsorship =  visa_sponsorship
+                new_job.save()
+        template_data["jobs"]  = Job.objects.all()
     
     db_role.role = template_data["role"] 
     db_role.save() 
@@ -251,11 +265,34 @@ def index(request):
                   {'template_data' : template_data})
 
 
-#@login_required
-#def create_job(request):
-   # if request.method == "POST" and request.POST["newjob"]:
-   #     newjob = Job()
-   #     newjob.title = request.POST['']
+def edit_job(request, id):
+    editjob = get_object_or_404(Job, id=id)
+    template_data = {} 
+    template_data['editjob'] = editjob 
+
+    if request.method =="POST" :
+        updated_title = request.POST.get('title')
+        updated_skills = request.POST.get('skills')
+        updated_location = request.POST.get('location')
+        updated_salary_range = request.POST.get('salaryrange')
+        updated_remote_onsite = request.POST.get('remote')
+        updated_visa_sponsorship = request.POST.get('visa')
+
+        if updated_title != "" and updated_skills != "" and updated_location != "" and updated_salary_range != "" and updated_remote_onsite != "" and updated_visa_sponsorship != "":
+            
+            updated_job  = Job.objects.get(id = id)
+            updated_job.title = updated_title
+            updated_job.skills = updated_skills
+            updated_job.location = updated_location
+            updated_job.salaryRange = updated_salary_range
+            updated_job.remote = updated_remote_onsite
+            updated_job.visaSponsorship = updated_visa_sponsorship
+            updated_job.save()
+
+            return redirect('jobs.index')
+    return render(request, 'jobs/edit_job.html',  {'template_data' : template_data})
+
+
 
 
 
