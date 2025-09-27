@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Job
+from .models import Job, Role
 
 '''
 jobs = [
@@ -143,15 +143,20 @@ jobs = [
 def index(request):
     # get the request that tells job seeker or recuiter
     # add it to template data
+    template_data = {}
+    job_seeker_remove_filters = False
 
     jobs = Job.objects.all()
+    db_role = Role.objects.get(id = 1)
 
-    
-    
+
     role = request.POST.get('role')
-    if not role:
-        role = "Job Seeker"
-    
+    if role:
+        template_data["role"] = role 
+        if role == "Job Seeker":
+            job_seeker_remove_filters = True
+    else:
+        template_data["role"] = db_role.role
 
     title_filter = request.GET.get('title')
     skills_filter = request.GET.get("skills")
@@ -159,86 +164,100 @@ def index(request):
     salary_range = request.GET.get("salaryrange")
     remote_on_site = request.GET.get("remote")
     visa_sponsorship = request.GET.get("visa")
+
+
     jobs_filtered = []
     for job in jobs:
         jobs_filtered.append(job)
 
-    if title_filter is not None and title_filter != "":
-        ####For every job in jobs filtered 
-        new_jobs_filtered = []
-        for job in jobs_filtered:
-            if title_filter.lower()  in job.title.lower():
-                new_jobs_filtered.append(job)
-        jobs_filtered = new_jobs_filtered
-    if skills_filter is not None and skills_filter != "":
-        new_jobs_filtered = []
-        for job in jobs_filtered:
-            if skills_filter.lower()  in job.skills.lower():
-                new_jobs_filtered.append(job)
-        jobs_filtered = new_jobs_filtered
-    if location_filter is not None and location_filter != "" :
-        new_jobs_filtered = []
-        for job in jobs_filtered:
-          if location_filter.lower() in job.location.lower():
-               new_jobs_filtered.append(job)
-        jobs_filtered = new_jobs_filtered
 
-    if salary_range is not None and salary_range != "":
-        new_jobs_filtered = []
-        for job in jobs_filtered:
-            if salary_range.lower() in job.salaryRange.lower():
-                new_jobs_filtered.append(job)
-        jobs_filtered = new_jobs_filtered
+    if template_data["role"] == "Job Seeker" and not job_seeker_remove_filters:
+        if title_filter is not None and title_filter != "":
+            ####For every job in jobs filtered 
+            new_jobs_filtered = []
+            for job in jobs_filtered:
+                if title_filter.lower()  in job.title.lower():
+                    new_jobs_filtered.append(job)
+            jobs_filtered = new_jobs_filtered
+        if skills_filter is not None and skills_filter != "":
+            new_jobs_filtered = []
+            for job in jobs_filtered:
+                if skills_filter.lower()  in job.skills.lower():
+                    new_jobs_filtered.append(job)
+            jobs_filtered = new_jobs_filtered
+        if location_filter is not None and location_filter != "" :
+            new_jobs_filtered = []
+            for job in jobs_filtered:
+                if location_filter.lower() in job.location.lower():
+                    new_jobs_filtered.append(job)
+            jobs_filtered = new_jobs_filtered
 
-    if remote_on_site is not None and remote_on_site != "":
-        new_jobs_filtered = []
-        for job in jobs_filtered:
-            if remote_on_site.lower() in job.remote.lower():
-                new_jobs_filtered.append(job)
-        jobs_filtered = new_jobs_filtered
+        if salary_range is not None and salary_range != "":
+            new_jobs_filtered = []
+            for job in jobs_filtered:
+                if salary_range.lower() in job.salaryRange.lower():
+                    new_jobs_filtered.append(job)
+            jobs_filtered = new_jobs_filtered
 
-    if visa_sponsorship is not None and visa_sponsorship != "":
-        new_jobs_filtered = []
-        for job in jobs_filtered:
-            if visa_sponsorship.lower() in job.visaSponsorship.lower():
-                new_jobs_filtered.append(job)
-        jobs_filtered = new_jobs_filtered
-    
-    if role == "Recruiter":
+        if remote_on_site is not None and remote_on_site != "":
+            new_jobs_filtered = []
+            for job in jobs_filtered:
+                if remote_on_site.lower() in job.remote.lower():
+                    new_jobs_filtered.append(job)
+            jobs_filtered = new_jobs_filtered
+
+        if visa_sponsorship is not None and visa_sponsorship != "":
+            new_jobs_filtered = []
+            for job in jobs_filtered:
+                if visa_sponsorship.lower() in job.visaSponsorship.lower():
+                    new_jobs_filtered.append(job)
+            jobs_filtered = new_jobs_filtered
+        
+        if title_filter is None:
+            title_filter = ""
+
+        if skills_filter is None:
+            skills_filter = ""
+        
+        
+        if location_filter is None:
+            location_filter = ""
+        
+        if salary_range is None:
+            salary_range  = ""
+        
+        if remote_on_site is None:
+            remote_on_site = ""
+
+        if visa_sponsorship is None:
+            visa_sponsorship = ""
+        
+
+        template_data["title"] = title_filter
+        template_data["skills"] = skills_filter
+        template_data["location"] = location_filter
+        template_data["salaryrange"] = salary_range
+        template_data["remote"] = remote_on_site
+        template_data["visa"] = visa_sponsorship
+
+        
+    if template_data['role'] == "Recruiter":
         jobs_filtered = jobs
-    
-    if title_filter is None:
-        title_filter = ""
-
-    if skills_filter is None:
-        skills_filter = ""
-    
-    
-    if location_filter is None:
-        location_filter = ""
-    
-    if salary_range is None:
-        salary_range  = ""
-    
-    if remote_on_site is None:
-        remote_on_site = ""
-
-    if visa_sponsorship is None:
-        visa_sponsorship = ""
-    
-
-    template_data = {}
-    template_data["title"] = title_filter
-    template_data["skills"] = skills_filter
-    template_data["location"] = location_filter
-    template_data["salaryrange"] = salary_range
-    template_data["remote"] = remote_on_site
-    template_data["visa"] = visa_sponsorship
-
     template_data["jobs"] = jobs_filtered
-    template_data["role"] = role
+    
+    db_role.role = template_data["role"] 
+    db_role.save() 
     return render(request, 'jobs/index.html',
                   {'template_data' : template_data})
+
+
+#@login_required
+#def create_job(request):
+   # if request.method == "POST" and request.POST["newjob"]:
+   #     newjob = Job()
+   #     newjob.title = request.POST['']
+
+
 
 
 

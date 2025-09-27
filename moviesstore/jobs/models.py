@@ -10,3 +10,5 @@ class Job(models.Model):
     visaSponsorship = models.TextField()
     def __str__(self):
         return str(self.id) + '-' + self.title
+class Role(models.Model):
+    role = models.TextField()
