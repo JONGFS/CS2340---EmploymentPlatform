@@ -1,5 +1,7 @@
 from django.shortcuts import render
+from .models import Job
 
+'''
 jobs = [
     {
         'id': 1, "Title": "Manager", 
@@ -136,10 +138,15 @@ jobs = [
         "visasponsorship": "Yes"
     },
 ]
+'''
 
 def index(request):
     # get the request that tells job seeker or recuiter
     # add it to template data
+
+    jobs = Job.objects.all()
+
+    
     
     role = request.POST.get('role')
     if not role:
@@ -160,40 +167,40 @@ def index(request):
         ####For every job in jobs filtered 
         new_jobs_filtered = []
         for job in jobs_filtered:
-            if title_filter.lower()  in job["Title"].lower():
+            if title_filter.lower()  in job.title.lower():
                 new_jobs_filtered.append(job)
         jobs_filtered = new_jobs_filtered
     if skills_filter is not None and skills_filter != "":
         new_jobs_filtered = []
         for job in jobs_filtered:
-            if skills_filter.lower()  in job["Skills"].lower():
+            if skills_filter.lower()  in job.skills.lower():
                 new_jobs_filtered.append(job)
         jobs_filtered = new_jobs_filtered
     if location_filter is not None and location_filter != "" :
         new_jobs_filtered = []
         for job in jobs_filtered:
-          if location_filter.lower() in job["Location"].lower():
+          if location_filter.lower() in job.location.lower():
                new_jobs_filtered.append(job)
         jobs_filtered = new_jobs_filtered
 
     if salary_range is not None and salary_range != "":
         new_jobs_filtered = []
         for job in jobs_filtered:
-            if salary_range.lower() in job["SalaryRange"].lower():
+            if salary_range.lower() in job.salaryRange.lower():
                 new_jobs_filtered.append(job)
         jobs_filtered = new_jobs_filtered
 
     if remote_on_site is not None and remote_on_site != "":
         new_jobs_filtered = []
         for job in jobs_filtered:
-            if remote_on_site.lower() in job["remote"].lower():
+            if remote_on_site.lower() in job.remote.lower():
                 new_jobs_filtered.append(job)
         jobs_filtered = new_jobs_filtered
 
     if visa_sponsorship is not None and visa_sponsorship != "":
         new_jobs_filtered = []
         for job in jobs_filtered:
-            if visa_sponsorship.lower() in job["visasponsorship"].lower():
+            if visa_sponsorship.lower() in job.visaSponsorship.lower():
                 new_jobs_filtered.append(job)
         jobs_filtered = new_jobs_filtered
     
@@ -218,6 +225,7 @@ def index(request):
 
     if visa_sponsorship is None:
         visa_sponsorship = ""
+    
 
     template_data = {}
     template_data["title"] = title_filter
@@ -226,7 +234,6 @@ def index(request):
     template_data["salaryrange"] = salary_range
     template_data["remote"] = remote_on_site
     template_data["visa"] = visa_sponsorship
-
 
     template_data["jobs"] = jobs_filtered
     template_data["role"] = role
