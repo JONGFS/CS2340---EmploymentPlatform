@@ -5,6 +5,7 @@ from .forms import CustomUserCreationForm, CustomErrorList
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from .forms import PrivacyForm 
 
 @login_required
 def logout(request):
@@ -49,4 +50,19 @@ def orders(request):
     template_data['title'] = 'Orders'
     template_data['orders'] = request.user.order_set.all()
     return render(request, 'accounts/orders.html', {'template_data': template_data})
-    # Create your views here.
+
+@login_required
+def privacy_settings(request):
+    profile = request.user.profile
+    if request.method == 'POST':
+        form = PrivacyForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            template_data = {'title': 'Privacy Settings', 'form': form, 'success': 'Settings saved!'}
+            return render(request, 'accounts/privacy.html', {'template_data': template_data})
+    else:
+        form = PrivacyForm(instance=profile)
+        template_data = {'title': 'Privacy Settings', 'form': form}
+    return render(request, 'accounts/privacy.html', {'template_data': template_data})
+
+

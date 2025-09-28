@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Privacy Settings</h2>
+  <hr>
+  {% if template_data.success %}
+  <div class="alert alert-success" role="alert">
+    {{ template_data.success }}
+  </div>
+  {% endif %}
+  <form method="POST">
+    {% csrf_token %}
+    {{ template_data.form.as_p }}
+    <button type="submit" class="btn btn-dark">Save</button>
+  </form>
+</div>
+{% endblock content %}

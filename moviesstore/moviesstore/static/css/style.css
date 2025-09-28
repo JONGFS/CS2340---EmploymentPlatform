@@ -42,3 +42,7 @@
   width: fit-content;
   max-height: 400px;
 }
+
+.privacy-tab {
+  color: #FFFEF6 !important;
+}
