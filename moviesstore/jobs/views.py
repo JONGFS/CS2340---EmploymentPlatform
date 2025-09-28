@@ -293,6 +293,24 @@ def edit_job(request, id):
     return render(request, 'jobs/edit_job.html',  {'template_data' : template_data})
 
 
+def apply_job(request, id):
+    """Handle a job seeker applying to a job. Accepts POST with optional name, email, cover_letter."""
+    job = get_object_or_404(Job, id=id)
+    if request.method == 'POST':
+        name = request.POST.get('name', '')
+        email = request.POST.get('email', '')
+        cover = request.POST.get('cover_letter', '')
+        # Create application record
+        from .models import Application
+        Application.objects.create(job=job, applicant_name=name, applicant_email=email, cover_letter=cover)
+        # Add a success message and redirect back to jobs index
+        from django.contrib import messages
+        messages.success(request, 'Your application has been submitted.')
+        return redirect('jobs.index')
+    # If GET, show a minimal apply form template (could be modal in future)
+    return render(request, 'jobs/apply.html', {'job': job})
+
+
 
 
 
