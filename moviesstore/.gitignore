@@ -1,4 +1,5 @@
 __pycache__/
+<<<<<<< HEAD
 *.py[cod]
 .DS_Store
 db.sqlite3
@@ -8,3 +9,10 @@ __pycache__/
 .DS_Store
 db.sqlite3
 *.sqlite3
+=======
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+.DS_Store
+>>>>>>> 64f670f (chore: ignore pycache/pyc, DB, and OS files; remove from VCS)
