@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="p-3 mt-4">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card shadow p-3 mb-4 rounded">
+          <div class="card-body">
+            <h2>Create Your Profile</h2>
+            <hr />
+
+            <form method="POST">
+              {% csrf_token %}
+
+              <!-- Default auth/user fields -->
+              {{ template_data.form.username }}
+              {{ template_data.form.email }}
+              {{ template_data.form.password1 }}
+              {{ template_data.form.password2 }}
+
+              <hr />
+
+              <!-- Profile fields required by user story -->
+              <div class="mb-3">
+                <label for="headline">Headline</label>
+                <input type="text" id="headline" name="headline" class="form-control" placeholder="e.g. Full-Stack Developer">
+              </div>
+
+              <div class="mb-3">
+                <label for="skills">Skills</label>
+                <textarea id="skills" name="skills" class="form-control" placeholder="e.g. Python, React, SQL"></textarea>
+              </div>
+
+              <div class="mb-3">
+                <label for="education">Education</label>
+                <textarea id="education" name="education" class="form-control" placeholder="e.g. B.S. in Computer Science"></textarea>
+              </textarea>
+              </div>
+
+              <div class="mb-3">
+                <label for="work_experience">Work Experience</label>
+                <textarea id="work_experience" name="work_experience" class="form-control" placeholder="e.g. Intern at XYZ Company"></textarea>
+              </div>
+
+              <div class="mb-3">
+                <label for="links">Links</label>
+                <textarea id="links" name="links" class="form-control" placeholder="e.g. LinkedIn, GitHub, Portfolio"></textarea>
+              </div>
+
+              <button type="submit" class="btn bg-dark text-white">
+                Sign Up
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
