@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-
+from jobs.models import Job
 class Skill(models.Model):
     name = models.CharField(max_length=64, unique=True)
 
@@ -39,8 +39,11 @@ class Application(models.Model):
         (OFFER, "Offer"),
         (CLOSED, "Closed"),
     ]
-
-    job = models.ForeignKey(JobPosting, on_delete=models.CASCADE, related_name="applications")
+    id = models.AutoField(primary_key=True)
+    job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name='applications')
+    applicant_name = models.TextField(blank=True)
+    applicant_email = models.TextField(blank=True)
+    cover_letter = models.TextField(blank=True)
     candidate = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="applications")
     note = models.TextField(blank=True)
     status = models.CharField(max_length=12, choices=STATUS_CHOICE, default=APPLIED)

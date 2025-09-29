@@ -13,7 +13,7 @@ def my_applications(request):
         .order_by("-updated_at")
     )
     return render(request, "my_applications.html", {"apps": apps})
-
+@login_required
 def candidate_search(request):
     q = (request.GET.get("q") or "").strip()
     candidates = (

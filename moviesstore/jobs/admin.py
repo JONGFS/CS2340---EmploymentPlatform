@@ -1,6 +1,7 @@
 from django.contrib import admin
 # ...existing code...
-from .models import Job, Role, Application
+from .models import Job, Role
+from profiles.models import Application
 # Register your models here.
 
 admin.site.register(Job)

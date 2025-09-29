@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Job, Role
-
+from django.contrib.auth.decorators import login_required
+from profiles.models import Application
 '''
 jobs = [
     {
@@ -292,17 +293,16 @@ def edit_job(request, id):
             return redirect('jobs.index')
     return render(request, 'jobs/edit_job.html',  {'template_data' : template_data})
 
-
+@login_required
 def apply_job(request, id):
     """Handle a job seeker applying to a job. Accepts POST with optional name, email, cover_letter."""
-    job = get_object_or_404(Job, id=id)
+    job = get_object_or_404(Job, pk=id)
     if request.method == 'POST':
         name = request.POST.get('name', '')
         email = request.POST.get('email', '')
         cover = request.POST.get('cover_letter', '')
         # Create application record
-        from .models import Application
-        Application.objects.create(job=job, applicant_name=name, applicant_email=email, cover_letter=cover)
+        app, created = Application.objects.get_or_create(job=job, candidate=request.user, applicant_name=name, applicant_email=email, cover_letter=cover)
         # Add a success message and redirect back to jobs index
         from django.contrib import messages
         messages.success(request, 'Your application has been submitted.')

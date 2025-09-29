@@ -15,4 +15,3 @@ db.sqlite3
 *.pyd
 *.sqlite3
 .DS_Store
->>>>>>> 64f670f (chore: ignore pycache/pyc, DB, and OS files; remove from VCS)
