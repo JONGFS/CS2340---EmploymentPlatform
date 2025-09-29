@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+<div class="p-3">
+  <div class="container">
+
+    <form method="post">
+        {% csrf_token %}
+        <label for="role">Role:</label>
+        <select name="role" id="role" class="form-select">
+        <option value="Job Seeker" {% if template_data.role == "Job Seeker" %}selected{% endif %}>Job Seeker</option>
+        <option value="Recruiter" {% if template_data.role == "Recruiter" %}selected{% endif %}>Recruiter</option>
+        </select>
+        <button type="submit">Submit </button>
+    </form>
+
+    <div class="row mt-3">
+      <div class="col mx-auto mb-3">
+        <h2>List of Jobs</h2>
+        <hr />
+
+      <p class="card-text"> 
+          <form method="GET">
+
+    <div class="row g-2 mb-3">
+        <div class="col-auto">
+          {% if template_data.role == "Recruiter" %}
+            <label>Add New Job Posting</label>
+          {% elif template_data.role == "Job Seeker" %}
+            <label>Search Job Opportunities</label>
+          {% endif %}
+        </div>
+    </div>
+
+
+
+      <div class="row g-2 mb-3">
+        <div class="col-auto">
+            <div class="input-group">
+            <span class="input-group-text">Title</span>
+            <input type="text" class="form-control" name="title" value="{{ template_data.title }}">
+            </div>
+        </div>
+
+        <div class="col-auto">
+            <div class="input-group">
+            <span class="input-group-text">Skills</span>
+            <input type="text" class="form-control" name="skills" value="{{ template_data.skills }}">
+            </div>
+        </div>
+
+        <div class="col-auto">
+            <div class="input-group">
+            <span class="input-group-text">Location</span>
+            <input type="text" class="form-control" name="location" value="{{ template_data.location }}">
+            </div>
+        </div>
+
+        <div class="col-auto">
+            <div class="input-group">
+            <span class="input-group-text">Salary Range</span>
+            <input type="text" class="form-control" name="salaryrange" value="{{ template_data.salaryrange }}">
+            </div>
+        </div>
+
+        <div class="col-auto">
+            <div class="input-group">
+            <span class="input-group-text">Remote/Onsite</span>
+            <input type="text" class="form-control" name="remote" value="{{ template_data.remote }}">
+            </div>
+        </div>
+
+        <div class="col-auto">
+            <div class="input-group">
+            <span class="input-group-text">Visa Sponsorship</span>
+            <input type="text" class="form-control" name="visa" value="{{ template_data.visa }}">
+            </div>
+        </div>
+        
+        <div class="col-auto">
+            <button class="btn bg-dark text-white" type="submit"> 
+              {% if "Recruiter" == template_data.role %}
+                  Submit
+              {% else %}
+                  Search
+              {% endif %}
+            </button>
+        </div>
+        </div>
+
+          </form>
+        </p> 
+
+      </div>
+    </div>
+    <div class="row">
+      {% for job in template_data.jobs%}
+      <div class="col-md-4 col-lg-3 mb-2">
+
+        <div class="p-2 card align-items-center pt-4">
+          <div class="card-body text-center">
+            <strong> Job Title: </strong> {{ job.title }}
+          </div>
+          <div class="card-body text-center">
+            <strong> Job Skills: </strong> {{ job.skills }}
+          </div>
+          <div class="card-body text-center">
+                <strong> Job Location: </strong> {{ job.location }}
+          </div>
+           <div class="card-body text-center">
+              <strong> Salary Range: </strong> {{ job.salaryRange }}
+          </div>
+          <div class="card-body text-center">
+               <strong> Job Remote or In person </strong>{{ job.remote}}
+          </div>
+          <div class="card-body text-center">
+               <strong> Visa Sponsorship </strong> {{ job.visaSponsorship}}
+          </div>
+          {% if template_data.role == "Recruiter" %}
+              <a class = "btn btn-primary"
+                href = "{% url 'jobs.edit_job' id=job.id %}" >Edit
+              </a>
+          {% elif template_data.role == "Job Seeker" %}
+              <a class="btn btn-success" href="{% url 'jobs.apply_job' id=job.id %}">Apply</a>
+          {% endif %}
+        </div>
+
+
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock content %}

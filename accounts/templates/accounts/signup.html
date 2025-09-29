@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="p-3 mt-4">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-10">
+        <div class="card shadow p-3 mb-4 rounded">
+          <div class="card-body">
+            <h2>Sign Up - Create Your Profile</h2>
+            <hr />
+            <form method="POST">
+              {% csrf_token %}
+              
+              <!-- User Account Information -->
+              <div class="mb-4">
+                <h4 class="text-primary">Account Information</h4>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group mb-3">
+                      <label for="{{ template_data.user_form.username.id_for_label }}">Username</label>
+                      {{ template_data.user_form.username }}
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group mb-3">
+                      <label for="{{ template_data.user_form.password1.id_for_label }}">Password</label>
+                      {{ template_data.user_form.password1 }}
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group mb-3">
+                  <label for="{{ template_data.user_form.password2.id_for_label }}">Confirm Password</label>
+                  {{ template_data.user_form.password2 }}
+                </div>
+              </div>
+
+              <!-- Profile Information -->
+              <div class="mb-4">
+                <h4 class="text-primary">Professional Profile</h4>
+                <p class="text-muted">Help recruiters learn about you by filling out your profile information.</p>
+                
+                <div class="form-group mb-3">
+                  <label for="{{ template_data.profile_form.headline.id_for_label }}">Professional Headline</label>
+                  {{ template_data.profile_form.headline }}
+                  <small class="form-text text-muted">A brief professional title or headline</small>
+                </div>
+
+                <div class="form-group mb-3">
+                  <label for="{{ template_data.profile_form.skills.id_for_label }}">Skills</label>
+                  {{ template_data.profile_form.skills }}
+                  <small class="form-text text-muted">List your key skills and competencies</small>
+                </div>
+
+                <div class="form-group mb-3">
+                  <label for="{{ template_data.profile_form.education.id_for_label }}">Education</label>
+                  {{ template_data.profile_form.education }}
+                  <small class="form-text text-muted">Your educational background and qualifications</small>
+                </div>
+
+                <div class="form-group mb-3">
+                  <label for="{{ template_data.profile_form.work_experience.id_for_label }}">Work Experience</label>
+                  {{ template_data.profile_form.work_experience }}
+                  <small class="form-text text-muted">Your professional work history and experience</small>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-4">
+                    <div class="form-group mb-3">
+                      <label for="{{ template_data.profile_form.portfolio_link.id_for_label }}">Portfolio/Website</label>
+                      {{ template_data.profile_form.portfolio_link }}
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group mb-3">
+                      <label for="{{ template_data.profile_form.linkedin_link.id_for_label }}">LinkedIn Profile</label>
+                      {{ template_data.profile_form.linkedin_link }}
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group mb-3">
+                      <label for="{{ template_data.profile_form.github_link.id_for_label }}">GitHub Profile</label>
+                      {{ template_data.profile_form.github_link }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group mb-3">
+                  <label for="{{ template_data.profile_form.other_links.id_for_label }}">Other Links</label>
+                  {{ template_data.profile_form.other_links }}
+                  <small class="form-text text-muted">Any other relevant links (portfolio, blog, etc.)</small>
+                </div>
+              </div>
+
+              <div class="text-center">
+                <button type="submit" class="btn bg-dark text-white btn-lg px-5">Create Account & Profile</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
