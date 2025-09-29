@@ -27,7 +27,8 @@
             <!--<a class="nav-link" href="{% url 'home.about' %}">About</a>  --> 
             <!--<a class="nav-link" href="{% url 'movies.index' %}">Movies</a> --->
             <a class="nav-link" href="{% url 'jobs.index' %}">Jobs</a>
-
+            <a class="nav-link" href="{% url 'profiles:my_applications' %}">Applications</a>
+            <a class="nav-link" href="{% url 'profiles:candidate_search' %}">Candidate Search</a>
             <!--<a class="nav-link" href="{% url 'cart.index' %}">Cart</a> -->
             <div class="vr bg-white mx-2 d-none d-lg-block"></div>
             {% if user.is_authenticated %}
