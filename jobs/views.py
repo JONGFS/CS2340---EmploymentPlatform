@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Job, Role
 from django.contrib.auth.decorators import login_required
 from profiles.models import Application
-'''
+
 jobs = [
     {
         'id': 1, "Title": "Manager", 
@@ -139,7 +139,7 @@ jobs = [
         "visasponsorship": "Yes"
     },
 ]
-'''
+
 
 def index(request):
     # get the request that tells job seeker or recuiter
@@ -148,7 +148,7 @@ def index(request):
     job_seeker_remove_filters = False
 
     jobs = Job.objects.all()
-    db_role = Role.objects.get(id = 1)
+    db_role, created = Role.objects.get_or_create(id=1, defaults={'role': 'Job Seeker'})
 
 
     role = request.POST.get('role')

@@ -2,7 +2,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.db.models import Q, Count
 
-from .models import Application, CandidateProfile
+from .models import Application
+from accounts.models import Profile
 
 @login_required
 def my_applications(request):
@@ -13,26 +14,18 @@ def my_applications(request):
         .order_by("-updated_at")
     )
     return render(request, "my_applications.html", {"apps": apps})
-@login_required
 def candidate_search(request):
-    q = (request.GET.get("q") or "").strip()
-    candidates = (
-        CandidateProfile.objects
-        .select_related("user")
-        .prefetch_related("work_experience")
-        .all()
-    )
-    if q:
-        candidates = candidates.filter(
-            Q(user__username__icontains=q) |
-            Q(headline__icontains=q) |
-            Q(location__icontains=q) |
-            Q(education__icontains=q) |
-            Q(skills__icontains=q)
+    term = request.GET.get('q', '').strip()
+
+    qs = Profile.objects.select_related('user').filter(privacy='public')
+
+    if term:
+        qs = qs.filter(
+            Q(user__username__icontains=term) |
+            Q(headline__icontains=term) |
+            Q(skills__icontains=term) |
+            Q(education__icontains=term) |
+            Q(work_experience__icontains=term)
         )
 
-    return render(
-        request,
-        "candidate_search.html",
-        {"candidates": candidates, "q": q},
-    )
+    return render(request, 'candidate_search.html', {'candidates': qs})

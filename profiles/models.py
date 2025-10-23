@@ -7,18 +7,22 @@ class Skill(models.Model):
     def __str__(self) -> str:
         return self.name
 
-class CandidateProfile(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    headline = models.CharField(max_length=120, blank=True)
-    education = models.CharField(max_length=60, blank=True)
-    skills = models.CharField(max_length=120, blank=True)  # keep as you had it
-    work_experience = models.ManyToManyField(Skill, blank=True)
-    portfolio_url = models.URLField(blank=True)
-    location = models.CharField(max_length=120, blank=True)
+#class CandidateProfile(models.Model):
+    #user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    #headline = models.CharField(max_length=120, blank=True)
+    #education = models.CharField(max_length=60, blank=True)
+    #skills = models.CharField(max_length=120, blank=True)  # keep as you had it
+    #work_experience = models.ManyToManyField(Skill, blank=True)
+    #portfolio_url = models.URLField(blank=True)
+    #location = models.CharField(max_length=120, blank=True)
 
-    def __str__(self) -> str:
-        return self.user.username
-
+    #def __str__(self) -> str:
+        #return self.user.username
+class CandidateExtras(models.Model):
+    profile = models.OneToOneField('accounts.Profile',
+                                   on_delete=models.CASCADE,
+                                   related_name='extras')
+                                   
 class JobPosting(models.Model):
     title = models.CharField(max_length=140)
     company = models.CharField(max_length=140)
