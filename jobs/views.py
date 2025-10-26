@@ -3,143 +3,19 @@ from .models import Job, Role
 from django.contrib.auth.decorators import login_required
 from profiles.models import Application
 
-jobs = [
-    {
-        'id': 1, "Title": "Manager", 
-        "Skills": "Good at PR, Soft skills, AI, Communication, Leadership",
-        "Location": "Atlanta, Georgia", 
-        "SalaryRange": "200 to 300 thousand", 
-        "remote": "on-site",  
-        "visasponsorship": "Yes"
-    },
 
-    {
-        'id': 2, "Title": "Worker", 
-        "Skills": "Good at PR, Soft skills, AI, can follow directions, and listen",
-        "Location": "Atlanta, Georgia", 
-        "SalaryRange": "20 dollars per day", 
-        "remote": "on-site",  
-        "visasponsorship": "Yes"
-    },
-
-    {
-        'id': 3, "Title": "Software Engineer", 
-        "Skills": "Python, Django, REST APIs, Problem-solving, Teamwork", 
-        "Location": "New York, New York", 
-        "SalaryRange": "90 to 120 thousand", 
-        "remote": "hybrid", 
-        "visasponsorship": "No"
-    },
-
-    {
-        'id': 4, "Title": "Data Scientist", 
-        "Skills": "Python, Machine Learning, AI, Statistics, Communication", 
-        "Location": "San Francisco, California", 
-        "SalaryRange": "120 to 150 thousand", 
-        "remote": "remote", 
-        "visasponsorship": "Yes"
-    },
-
-    {
-        'id': 5, "Title": "Manager", 
-        "Skills": "Leadership, Negotiation, PR, Strategic Planning", 
-        "Location": "Chicago, Illinois", 
-        "SalaryRange": "180 to 250 thousand", 
-        "remote": "on-site", 
-        "visasponsorship": "No"
-    },
-
-    {
-        'id': 6, "Title": "UX Designer", 
-        "Skills": "Figma, UI Design, Creativity, Communication", 
-        "Location": "Austin, Texas", 
-        "SalaryRange": "70 to 100 thousand", 
-        "remote": "hybrid", 
-        "visasponsorship": "No"
-    },
-
-    {
-        'id': 7, "Title": "Software Engineer", 
-        "Skills": "Java, Spring Boot, SQL, Teamwork", 
-        "Location": "Atlanta, Georgia", 
-        "SalaryRange": "80 to 110 thousand", 
-        "remote": "on-site", 
-        "visasponsorship": "Yes"
-    },
-
-    {
-        'id': 8, "Title": "Worker", 
-        "Skills": "Physical labor, Attention to detail, Safety, Listening", 
-        "Location": "Houston, Texas", 
-        "SalaryRange": "15 dollars per hour", 
-        "remote": "on-site", 
-        "visasponsorship": "No"
-    },
-
-    {
-        'id': 9, "Title": "Data Scientist", 
-        "Skills": "R, SQL, Data Visualization, Communication", 
-        "Location": "Boston, Massachusetts", 
-        "SalaryRange": "100 to 130 thousand", 
-        "remote": "remote", 
-        "visasponsorship": "Yes"
-    },
-
-    {
-        'id': 10, "Title": "HR Manager", 
-        "Skills": "Recruitment, Soft skills, Leadership, Conflict resolution", 
-        "Location": "Miami, Florida", 
-        "SalaryRange": "90 to 140 thousand", 
-        "remote": "on-site", 
-        "visasponsorship": "No"
-    },
-
-    {
-        'id': 11, "Title": "Software Engineer", 
-        "Skills": "C++, Algorithms, Problem-solving, AI", 
-        "Location": "Seattle, Washington", 
-        "SalaryRange": "100 to 140 thousand", 
-        "remote": "remote", 
-        "visasponsorship": "Yes"
-    },
-
-    {
-        'id': 12, "Title": "Worker", 
-        "Skills": "Teamwork, Safety, Manual handling, Listening", 
-        "Location": "New York, New York", 
-        "SalaryRange": "18 dollars per hour", 
-        "remote": "on-site", 
-        "visasponsorship": "No"
-    },
-
-    {
-        'id': 13, "Title": "Manager", 
-        "Skills": "Leadership, PR, Communication, Project Management", 
-        "Location": "Los Angeles, California", 
-        "SalaryRange": "150 to 220 thousand", 
-        "remote": "hybrid", 
-        "visasponsorship": "Yes"
-    },
-
-    {
-        'id': 14, "Title": "Data Analyst", 
-        "Skills": "SQL, Excel, Tableau, Communication", 
-        "Location": "Chicago, Illinois", 
-        "SalaryRange": "60 to 90 thousand", 
-        "remote": "remote", 
-        "visasponsorship": "No"
-    },
-
-    {
-        'id': 15, "Title": "UX Designer", 
-        "Skills": "Adobe XD, Wireframing, User research, Creativity", 
-        "Location": "San Diego, California", 
-        "SalaryRange": "65 to 95 thousand", 
-        "remote": "hybrid", 
-        "visasponsorship": "Yes"
-    },
+jobs_data = [
+    {'title': 'Software Engineer', 'skills': 'Python, Django, PostgreSQL', 'location': 'San Francisco, CA', 'salaryRange': '$120,000 - $160,000', 
+    'remote': 'Hybrid', 'visaSponsorship': 'Yes'},
+    {'title': 'Frontend Developer', 'skills': 'React, JavaScript, CSS, HTML', 'location': 'New York, NY', 'salaryRange': '$100,000 - $140,000', 
+    'remote': 'Remote', 'visaSponsorship': 'No'},
+    {'title': 'Data Scientist', 'skills': 'Python, Machine Learning, SQL, Pandas', 'location': 'Austin, TX', 'salaryRange': '$110,000 - $150,000',
+    'remote': 'Yes', 'visaSponsorship': 'Yes'},
+    {'title': 'DevOps Engineer', 'skills': 'AWS, Docker, Kubernetes, Jenkins', 'location': 'Seattle, WA', 'salaryRange': '$130,000 - $170,000',
+    'remote': 'Hybrid','visaSponsorship': 'No' },
+    {'title': 'Product Manager','skills': 'Agile, Jira, Product Strategy, Communication','location': 'Boston, MA','salaryRange': '$115,000 - $155,000',
+    'remote': 'No','visaSponsorship': 'Yes'}
 ]
-
 
 def index(request):
     # get the request that tells job seeker or recuiter
@@ -147,10 +23,12 @@ def index(request):
     template_data = {}
     job_seeker_remove_filters = False
 
+
     jobs = Job.objects.all()
     db_role, created = Role.objects.get_or_create(id=1, defaults={'role': 'Job Seeker'})
-
-
+    if not Job.objects.all().exists():
+         for job_dict in jobs_data:
+            Job.objects.create(**job_dict)
     role = request.POST.get('role')
     if role:
         template_data["role"] = role 
@@ -259,9 +137,40 @@ def index(request):
                 new_job.visaSponsorship =  visa_sponsorship
                 new_job.save()
         template_data["jobs"]  = Job.objects.all()
-    
+
     db_role.role = template_data["role"] 
     db_role.save() 
+    list_of_applied_jobs = []
+    applied_job_ids = []
+    for job_application in Application.objects.all():
+        if job_application.candidate == request.user:
+            list_of_applied_jobs.append(job_application.job)
+            current_job_id = str(job_application.job).split("-")[0]
+            current_job_id = int(current_job_id)
+            applied_job_ids.append(current_job_id)
+    template_data["applied_jobs_list"] = list_of_applied_jobs
+
+    profile_skills = request.user.profile.skills
+    user_skills = []
+    if '/n' in  profile_skills:
+        user_skills = set(skill.strip().lower() for skill  in profile_skills.split('\n'))
+    else:
+        user_skills = set(skill.strip().lower() for skill  in profile_skills.split(','))
+    template_data["My_skills"] = user_skills
+    
+    list_of_recommended_jobs = []
+    for job in Job.objects.all():
+        job_skills_string = job.skills
+
+        job_skills= []
+        if '\n' in job_skills_string:
+            job_skills = set(skill.strip().lower() for skill in job_skills_string.split('\n'))
+        else:
+            job_skills = set(skill.strip().lower() for skill in job_skills_string.split(','))
+        
+        if (user_skills & job_skills) and (job.id not in applied_job_ids): 
+            list_of_recommended_jobs.append(job)
+    template_data["recommended_jobs"] = list_of_recommended_jobs
     return render(request, 'jobs/index.html',
                   {'template_data' : template_data})
 
