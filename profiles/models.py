@@ -35,13 +35,12 @@ class JobPosting(models.Model):
         return f"{self.title} @ {self.company}"
 
 class Application(models.Model):
-    APPLIED = "APPLIED"; REVIEW = "REVIEW"; INTERVIEW = "INTERVIEW"; OFFER = "OFFER"; CLOSED = "CLOSED"
+    APPLIED = "APPLIED"; INTERVIEWING = "INTERVIEWING"; SELECTED = "SELECTED"; REJECTED = "REJECTED"
     STATUS_CHOICE = [
         (APPLIED, "Applied"),
-        (REVIEW, "Review"),
-        (INTERVIEW, "Interview"),
-        (OFFER, "Offer"),
-        (CLOSED, "Closed"),
+        (INTERVIEWING, "Interviewing"),
+        (SELECTED, "Selected for Position"),
+        (REJECTED, "Rejected"),
     ]
     id = models.AutoField(primary_key=True)
     job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name='applications')

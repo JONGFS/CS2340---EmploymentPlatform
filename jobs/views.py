@@ -3,6 +3,8 @@ from .models import Job, Role
 from django.contrib.auth.decorators import login_required
 from profiles.models import Application
 from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+import json
 
 
 jobs_data = [
@@ -253,3 +255,58 @@ def jobs_api_view(request):
             'visaSponsorship': job.visaSponsorship,
         })
     return JsonResponse({'jobs': data})
+
+@login_required
+def hiring_stages_view(request):
+    """Display the hiring stages board for recruiters."""
+    if not hasattr(request.user, "profile"):
+        return redirect("/accounts/login/")
+    
+    db_role = Role.objects.get(id=1)
+    if db_role.role != "Recruiter":
+        return redirect('jobs.index')
+    
+    applications = Application.objects.select_related('job').exclude(status='REJECTED').order_by('-created_at')
+    return render(request, 'jobs/hiring_stages.html', {'applications': applications})
+
+@login_required
+@require_http_methods(["POST"])
+def update_application_stage(request, application_id):
+    """Update the stage of an application."""
+    if not request.user.profile or Role.objects.get(id=1).role != "Recruiter":
+        return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=403)
+    
+    try:
+        data = json.loads(request.body)
+        new_stage = data.get('stage')
+        if new_stage not in [choice[0] for choice in Application.STATUS_CHOICE]:
+            return JsonResponse({'success': False, 'error': 'Invalid stage'}, status=400)
+        
+        application = Application.objects.get(id=application_id)
+        application.status = new_stage
+        application.save()
+        
+        return JsonResponse({'success': True})
+    except Application.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Application not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
+def application_details(request, application_id):
+    """Get detailed information about an application."""
+    if not request.user.profile or Role.objects.get(id=1).role != "Recruiter":
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    try:
+        application = Application.objects.select_related('job').get(id=application_id)
+        data = {
+            'applicant_name': application.applicant_name,
+            'applicant_email': application.applicant_email,
+            'job_title': application.job.title,
+            'cover_letter': application.cover_letter,
+            'status': application.status,
+        }
+        return JsonResponse(data)
+    except Application.DoesNotExist:
+        return JsonResponse({'error': 'Application not found'}, status=404)

@@ -91,6 +91,11 @@
   View Jobs on Map
 </a>
 
+{% if template_data.role == "Recruiter" %}
+<a href="{% url 'jobs.hiring_stages' %}" class="btn btn-success" style="margin: 10px 0 10px 10px;">
+  Manage Hiring Stages
+</a>
+{% endif %}
 
       <div class="row g-2 mb-3">
         <div class="col-auto">
