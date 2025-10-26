@@ -2,20 +2,31 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Job, Role
 from django.contrib.auth.decorators import login_required
 from profiles.models import Application
+from django.http import JsonResponse
 
 
 jobs_data = [
-    {'title': 'Software Engineer', 'skills': 'Python, Django, PostgreSQL', 'location': 'San Francisco, CA', 'salaryRange': '$120,000 - $160,000', 
-    'remote': 'Hybrid', 'visaSponsorship': 'Yes'},
-    {'title': 'Frontend Developer', 'skills': 'React, JavaScript, CSS, HTML', 'location': 'New York, NY', 'salaryRange': '$100,000 - $140,000', 
-    'remote': 'Remote', 'visaSponsorship': 'No'},
-    {'title': 'Data Scientist', 'skills': 'Python, Machine Learning, SQL, Pandas', 'location': 'Austin, TX', 'salaryRange': '$110,000 - $150,000',
-    'remote': 'Yes', 'visaSponsorship': 'Yes'},
-    {'title': 'DevOps Engineer', 'skills': 'AWS, Docker, Kubernetes, Jenkins', 'location': 'Seattle, WA', 'salaryRange': '$130,000 - $170,000',
-    'remote': 'Hybrid','visaSponsorship': 'No' },
-    {'title': 'Product Manager','skills': 'Agile, Jira, Product Strategy, Communication','location': 'Boston, MA','salaryRange': '$115,000 - $155,000',
-    'remote': 'No','visaSponsorship': 'Yes'}
+    {'title': 'Software Engineer', 'skills': 'Python, Django, PostgreSQL', 'location': 'San Francisco, CA',
+     'salaryRange': '$120,000 - $160,000', 'remote': 'Hybrid', 'visaSponsorship': 'Yes',
+     'latitude': 37.7749, 'longitude': -122.4194},
+
+    {'title': 'Frontend Developer', 'skills': 'React, JavaScript, CSS, HTML', 'location': 'New York, NY',
+     'salaryRange': '$100,000 - $140,000', 'remote': 'Remote', 'visaSponsorship': 'No',
+     'latitude': 40.7128, 'longitude': -74.0060},
+
+    {'title': 'Data Scientist', 'skills': 'Python, Machine Learning, SQL, Pandas', 'location': 'Austin, TX',
+     'salaryRange': '$110,000 - $150,000', 'remote': 'Yes', 'visaSponsorship': 'Yes',
+     'latitude': 30.2672, 'longitude': -97.7431},
+
+    {'title': 'DevOps Engineer', 'skills': 'AWS, Docker, Kubernetes, Jenkins', 'location': 'Seattle, WA',
+     'salaryRange': '$130,000 - $170,000', 'remote': 'Hybrid', 'visaSponsorship': 'No',
+     'latitude': 47.6062, 'longitude': -122.3321},
+
+    {'title': 'Product Manager', 'skills': 'Agile, Jira, Product Strategy, Communication', 'location': 'Boston, MA',
+     'salaryRange': '$115,000 - $155,000', 'remote': 'No', 'visaSponsorship': 'Yes',
+     'latitude': 42.3601, 'longitude': -71.0589},
 ]
+
 
 def index(request):
     # get the request that tells job seeker or recuiter
@@ -23,6 +34,8 @@ def index(request):
     template_data = {}
     job_seeker_remove_filters = False
 
+    if not hasattr(request.user, "profile"):
+        return redirect("/accounts/login/")
 
     jobs = Job.objects.all()
     db_role, created = Role.objects.get_or_create(id=1, defaults={'role': 'Job Seeker'})
@@ -219,9 +232,24 @@ def apply_job(request, id):
     # If GET, show a minimal apply form template (could be modal in future)
     return render(request, 'jobs/apply.html', {'job': job})
 
+def jobs_map_view(request):
+    """Render the map template."""
+    return render(request, 'jobs/map.html')
 
-
-
-
-
-
+def jobs_api_view(request):
+    """Return all job postings as JSON for the map."""
+    jobs = Job.objects.exclude(latitude__isnull=True).exclude(longitude__isnull=True)
+    data = []
+    for job in jobs:
+        data.append({
+            'id': job.id,
+            'title': job.title,
+            'location': job.location,
+            'latitude': job.latitude,
+            'longitude': job.longitude,
+            'skills': job.skills,
+            'salaryRange': job.salaryRange,
+            'remote': job.remote,
+            'visaSponsorship': job.visaSponsorship,
+        })
+    return JsonResponse({'jobs': data})
