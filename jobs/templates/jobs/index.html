@@ -4,16 +4,8 @@
 <div class="p-3">
   <div class="container">
 
-    <form method="post">
-        {% csrf_token %}
-        <label for="role">Role:</label>
-        <select name="role" id="role" class="form-select">
-        <option value="Job Seeker" {% if template_data.role == "Job Seeker" %}selected{% endif %}>Job Seeker</option>
-        <option value="Recruiter" {% if template_data.role == "Recruiter" %}selected{% endif %}>Recruiter</option>
-        </select>
-        <button type="submit">Submit </button>
-    </form>
-    {% if template_data.role == "Job Seeker"%}
+    <!-- Role is now determined from user profile -->
+    {% if template_data.role == "Job Seeker" %}
     <div class ="row mt-3">
     <div class = "col mx_auto mb-3">
     <h2> Recommended jobs </h2>
@@ -75,13 +67,12 @@
 
 
       <p class="card-text"> 
-          <form method="GET">
+          <form method="{% if template_data.role == 'Recruiter' %}POST{% else %}GET{% endif %}">
+            {% csrf_token %}
 
     <div class="row g-2 mb-3">
         <div class="col-auto">
-          {% if template_data.role == "Recruiter" %}
-            <label>Add New Job Posting</label>
-          {% elif template_data.role == "Job Seeker" %}
+          {% if template_data.role == "Job Seeker" %}
             <label>Search Job Opportunities</label>
           {% endif %}
         </div>

@@ -53,7 +53,6 @@ def candidate_search(request):
 
 @login_required
 def inbox(request):
-    # Get messages for the current user, ordered by newest first
     msgs = Message.objects.filter(recipient=request.user)\
         .select_related('sender')\
         .order_by('-created_at')\
@@ -62,14 +61,13 @@ def inbox(request):
         .distinct()
     
     return render(request, 'message_inbox.html', {
-        'message_list': msgs,  # Renamed to avoid conflict with Django's messages framework
+        'message_list': msgs, 
         'title': 'Messages'
     })
 
 
 @login_required
 def compose_message(request, recipient_id=None):
-    # Only recruiters can compose internal messages to candidates
     try:
         user_profile = request.user.profile
     except Exception:
@@ -87,7 +85,6 @@ def compose_message(request, recipient_id=None):
         if form.is_valid():
             rid = form.cleaned_data['recipient_id']
             recipient = get_object_or_404(User, pk=rid)
-            # Only allow messaging actual candidates
             if getattr(recipient, 'profile', None) and recipient.profile.role != 'candidate':
                 messages.error(request, 'You can only message candidates.')
                 return redirect('profiles:candidate_search')
@@ -103,7 +100,6 @@ def compose_message(request, recipient_id=None):
 
 @login_required
 def compose_email(request, recipient_id=None):
-    # Only recruiters can send emails through the platform
     try:
         user_profile = request.user.profile
     except Exception:
@@ -113,9 +109,10 @@ def compose_email(request, recipient_id=None):
         return redirect('profiles:candidate_search')
     User = get_user_model()
     recipient_email = ''
+    recipient_user = None
     if recipient_id:
-        recipient = get_object_or_404(User, pk=recipient_id)
-        recipient_email = getattr(recipient, 'email', '')
+        recipient_user = get_object_or_404(User, pk=recipient_id)
+        recipient_email = getattr(recipient_user, 'email', '')
     if request.method == 'POST':
         form = EmailForm(request.POST)
         if form.is_valid():
@@ -131,7 +128,6 @@ def compose_email(request, recipient_id=None):
                 messages.error(request, 'Emails may only be sent to registered job seekers via their account. Please select a candidate from search.')
                 return redirect('profiles:candidate_search')
             subject = settings.EMAIL_SUBJECT_PREFIX + (form.cleaned_data['subject'] or '(no subject)')
-            # Add recruiter information to the body
             recruiter_info = f"\n\n---\nThis message was sent by {request.user.username}"
             if request.user.email:
                 recruiter_info += f"\nTo reply directly: {request.user.email}"
@@ -160,4 +156,4 @@ def compose_email(request, recipient_id=None):
             return redirect('profiles:candidate_search')
     else:
         form = EmailForm(initial={'recipient_email': recipient_email})
-    return render(request, 'compose_email.html', {'form': form})
+    return render(request, 'compose_email.html', {'form': form, 'recipient_user': recipient_user})

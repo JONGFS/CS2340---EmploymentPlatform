@@ -9,8 +9,14 @@ class Profile(models.Model):
         ('recruiters', 'Recruiters only'),
         ('private', 'Private'),
     ]
+    ROLE_CHOICES = [
+        ('candidate', 'Job Seeker'),
+        ('recruiter', 'Recruiter'),
+    ]
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     privacy = models.CharField(max_length=20, choices=PRIVACY_CHOICES, default='public')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='candidate', null=True)
+    company = models.CharField(max_length=100, blank=True, help_text="Company name (if you are a recruiter)")
     
     # Job seeker profile fields
     headline = models.CharField(max_length=200, blank=True, help_text="Professional headline or title")
@@ -27,6 +33,12 @@ class Profile(models.Model):
 
 @receiver(post_save, sender=User)
 def create_or_update_user_profile(sender, instance, created, **kwargs):
-    if created:
-        Profile.objects.create(user=instance)
-    instance.profile.save()
+    # Ensure a Profile exists for every User. If the user was just created,
+    # create a Profile. If not, create one if missing and save it.
+    profile, _ = Profile.objects.get_or_create(user=instance)
+    # Save to trigger any profile-level logic or defaults
+    try:
+        profile.save()
+    except Exception:
+        # In the unlikely event save fails, avoid crashing the whole request.
+        pass

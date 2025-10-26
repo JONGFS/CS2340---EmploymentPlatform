@@ -64,7 +64,6 @@ def signup(request):
         else:
             template_data['user_form'] = user_form
             template_data['profile_form'] = profile_form
-            # preserve which fields should be visible based on posted role
             posted_role = request.POST.get('role', 'candidate')
             template_data['show_candidate_fields'] = (posted_role != 'recruiter')
             return render(request, 'accounts/signup.html', {'template_data': template_data})

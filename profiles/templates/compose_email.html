@@ -6,7 +6,12 @@
     {% csrf_token %}
     <div class="mb-3">
       <label class="form-label">To</label>
-      {{ form.recipient_email }}
+      {% if recipient_user %}
+        <div class="form-control-plaintext">{{ recipient_user.username }} &lt;{{ recipient_user.email }}&gt;</div>
+        {{ form.recipient_email.as_hidden }}
+      {% else %}
+        {{ form.recipient_email }}
+      {% endif %}
     </div>
     <div class="mb-3">
       <label class="form-label">Subject</label>

@@ -10,6 +10,13 @@
             <hr />
             <form method="POST">
               {% csrf_token %}
+              <!-- Show form-level errors -->
+              {% if template_data.user_form.non_field_errors %}
+              <div class="mb-3">{{ template_data.user_form.non_field_errors }}</div>
+              {% endif %}
+              {% if template_data.profile_form.errors %}
+              <div class="mb-3">{{ template_data.profile_form.non_field_errors }}{{ template_data.profile_form.errors }}</div>
+              {% endif %}
               
               <!-- User Account Information -->
               <div class="mb-4">
@@ -25,17 +32,20 @@
                     <div class="form-group mb-3">
                       <label for="{{ template_data.user_form.password1.id_for_label }}">Password</label>
                       {{ template_data.user_form.password1 }}
+                      {{ template_data.user_form.password1.errors }}
                     </div>
                   </div>
                 </div>
                 <div class="form-group mb-3">
                   <label for="{{ template_data.user_form.email.id_for_label }}">Email</label>
                   {{ template_data.user_form.email }}
+                  {{ template_data.user_form.email.errors }}
                   <small class="form-text text-muted">We'll use this email for account communication. Required.</small>
                 </div>
                 <div class="form-group mb-3">
                   <label for="{{ template_data.user_form.password2.id_for_label }}">Confirm Password</label>
                   {{ template_data.user_form.password2 }}
+                  {{ template_data.user_form.password2.errors }}
                 </div>
               </div>
 
@@ -54,6 +64,7 @@
                 <div class="form-group mb-3">
                   <label for="{{ template_data.profile_form.company.id_for_label }}">Company</label>
                   {{ template_data.profile_form.company }}
+                  {{ template_data.profile_form.company.errors }}
                   <small class="form-text text-muted">Your company name will be visible to candidates when you contact them.</small>
                 </div>
                 {% endif %}

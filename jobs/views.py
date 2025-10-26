@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Job, Role
+from .models import Job
 from django.contrib.auth.decorators import login_required
 from profiles.models import Application
 from django.http import JsonResponse
@@ -31,26 +31,43 @@ jobs_data = [
 
 
 def index(request):
-    # get the request that tells job seeker or recuiter
-    # add it to template data
     template_data = {}
-    job_seeker_remove_filters = False
 
     if not hasattr(request.user, "profile"):
         return redirect("/accounts/login/")
 
+    # Map the profile role to template role
+    template_data["role"] = "Recruiter" if request.user.profile.role == "recruiter" else "Job Seeker"
+
+    # Initialize job listings
     jobs = Job.objects.all()
-    db_role, created = Role.objects.get_or_create(id=1, defaults={'role': 'Job Seeker'})
-    if not Job.objects.all().exists():
-         for job_dict in jobs_data:
+    if not jobs.exists():
+        for job_dict in jobs_data:
             Job.objects.create(**job_dict)
-    role = request.POST.get('role')
-    if role:
-        template_data["role"] = role 
-        if role == "Job Seeker":
-            job_seeker_remove_filters = True
-    else:
-        template_data["role"] = db_role.role
+
+    if request.method == 'POST' and template_data["role"] == "Recruiter":
+        title = request.POST.get('title')
+        skills = request.POST.get("skills")
+        location = request.POST.get("location")
+        salary_range = request.POST.get("salaryrange")
+        remote_on_site = request.POST.get("remote")
+        visa_sponsorship = request.POST.get("visa")
+
+        if all(val and val.strip() for val in [title, skills, location, salary_range, remote_on_site, visa_sponsorship]):
+            Job.objects.create(
+                title=title,
+                skills=skills,
+                location=location,
+                salaryRange=salary_range,
+                remote=remote_on_site,
+                visaSponsorship=visa_sponsorship
+            )
+            from django.contrib import messages
+            messages.success(request, 'Job posting created successfully')
+            return redirect('jobs.index')
+        else:
+            from django.contrib import messages
+            messages.error(request, 'Please fill in all fields')
 
     title_filter = request.GET.get('title')
     skills_filter = request.GET.get("skills")
@@ -59,102 +76,33 @@ def index(request):
     remote_on_site = request.GET.get("remote")
     visa_sponsorship = request.GET.get("visa")
 
+    jobs_filtered = list(jobs)
 
-    jobs_filtered = []
-    for job in jobs:
-        jobs_filtered.append(job)
+    if template_data["role"] == "Job Seeker":
+        if title_filter:
+            jobs_filtered = [job for job in jobs_filtered if title_filter.lower() in job.title.lower()]
+        if skills_filter:
+            jobs_filtered = [job for job in jobs_filtered if skills_filter.lower() in job.skills.lower()]
+        if location_filter:
+            jobs_filtered = [job for job in jobs_filtered if location_filter.lower() in job.location.lower()]
+        if salary_range:
+            jobs_filtered = [job for job in jobs_filtered if salary_range.lower() in job.salaryRange.lower()]
+        if remote_on_site:
+            jobs_filtered = [job for job in jobs_filtered if remote_on_site.lower() in job.remote.lower()]
+        if visa_sponsorship:
+            jobs_filtered = [job for job in jobs_filtered if visa_sponsorship.lower() in job.visaSponsorship.lower()]
 
+    template_data["jobs"] = jobs_filtered
 
-    if template_data["role"] == "Job Seeker" and not job_seeker_remove_filters:
-        if title_filter is not None and title_filter != "":
-            ####For every job in jobs filtered 
-            new_jobs_filtered = []
-            for job in jobs_filtered:
-                if title_filter.lower()  in job.title.lower():
-                    new_jobs_filtered.append(job)
-            jobs_filtered = new_jobs_filtered
-        if skills_filter is not None and skills_filter != "":
-            new_jobs_filtered = []
-            for job in jobs_filtered:
-                if skills_filter.lower()  in job.skills.lower():
-                    new_jobs_filtered.append(job)
-            jobs_filtered = new_jobs_filtered
-        if location_filter is not None and location_filter != "" :
-            new_jobs_filtered = []
-            for job in jobs_filtered:
-                if location_filter.lower() in job.location.lower():
-                    new_jobs_filtered.append(job)
-            jobs_filtered = new_jobs_filtered
+    template_data.update({
+        "title": title_filter or "",
+        "skills": skills_filter or "",
+        "location": location_filter or "",
+        "salaryrange": salary_range or "",
+        "remote": remote_on_site or "",
+        "visa": visa_sponsorship or ""
+    })
 
-        if salary_range is not None and salary_range != "":
-            new_jobs_filtered = []
-            for job in jobs_filtered:
-                if salary_range.lower() in job.salaryRange.lower():
-                    new_jobs_filtered.append(job)
-            jobs_filtered = new_jobs_filtered
-
-        if remote_on_site is not None and remote_on_site != "":
-            new_jobs_filtered = []
-            for job in jobs_filtered:
-                if remote_on_site.lower() in job.remote.lower():
-                    new_jobs_filtered.append(job)
-            jobs_filtered = new_jobs_filtered
-
-        if visa_sponsorship is not None and visa_sponsorship != "":
-            new_jobs_filtered = []
-            for job in jobs_filtered:
-                if visa_sponsorship.lower() in job.visaSponsorship.lower():
-                    new_jobs_filtered.append(job)
-            jobs_filtered = new_jobs_filtered
-        
-        if title_filter is None:
-            title_filter = ""
-
-        if skills_filter is None:
-            skills_filter = ""
-        
-        
-        if location_filter is None:
-            location_filter = ""
-        
-        if salary_range is None:
-            salary_range  = ""
-        
-        if remote_on_site is None:
-            remote_on_site = ""
-
-        if visa_sponsorship is None:
-            visa_sponsorship = ""
-        
-
-        template_data["title"] = title_filter
-        template_data["skills"] = skills_filter
-        template_data["location"] = location_filter
-        template_data["salaryrange"] = salary_range
-        template_data["remote"] = remote_on_site
-        template_data["visa"] = visa_sponsorship
-
-    
-    
-    if template_data['role'] == "Job Seeker":
-        template_data["jobs"] = jobs_filtered
-
-        
-    if template_data['role'] == "Recruiter":
-        if title_filter and skills_filter and location_filter and salary_range and remote_on_site and visa_sponsorship:
-            if title_filter != "" and skills_filter != "" and location_filter != "" and salary_range != "" and remote_on_site != "" and visa_sponsorship != "":
-                new_job = Job()
-                new_job.title = title_filter
-                new_job.skills = skills_filter
-                new_job.location = location_filter
-                new_job.salaryRange = salary_range
-                new_job.remote = remote_on_site
-                new_job.visaSponsorship =  visa_sponsorship
-                new_job.save()
-        template_data["jobs"]  = Job.objects.all()
-
-    db_role.role = template_data["role"] 
-    db_role.save() 
     list_of_applied_jobs = []
     applied_job_ids = []
     for job_application in Application.objects.all():
@@ -165,12 +113,13 @@ def index(request):
             applied_job_ids.append(current_job_id)
     template_data["applied_jobs_list"] = list_of_applied_jobs
 
-    profile_skills = request.user.profile.skills
-    user_skills = []
-    if '/n' in  profile_skills:
-        user_skills = set(skill.strip().lower() for skill  in profile_skills.split('\n'))
+    profile_skills = getattr(request.user.profile, 'skills', '') or ''
+    if '\n' in profile_skills:
+        user_skills = set(skill.strip().lower() for skill in profile_skills.split('\n') if skill.strip())
+    elif ',' in profile_skills:
+        user_skills = set(skill.strip().lower() for skill in profile_skills.split(',') if skill.strip())
     else:
-        user_skills = set(skill.strip().lower() for skill  in profile_skills.split(','))
+        user_skills = set([profile_skills.strip().lower()]) if profile_skills.strip() else set()
     template_data["My_skills"] = user_skills
     
     list_of_recommended_jobs = []
@@ -225,13 +174,10 @@ def apply_job(request, id):
         name = request.POST.get('name', '')
         email = request.POST.get('email', '')
         cover = request.POST.get('cover_letter', '')
-        # Create application record
         app, created = Application.objects.get_or_create(job=job, candidate=request.user, applicant_name=name, applicant_email=email, cover_letter=cover)
-        # Add a success message and redirect back to jobs index
         from django.contrib import messages
         messages.success(request, 'Your application has been submitted.')
         return redirect('jobs.index')
-    # If GET, show a minimal apply form template (could be modal in future)
     return render(request, 'jobs/apply.html', {'job': job})
 
 def jobs_map_view(request):
@@ -262,8 +208,7 @@ def hiring_stages_view(request):
     if not hasattr(request.user, "profile"):
         return redirect("/accounts/login/")
     
-    db_role = Role.objects.get(id=1)
-    if db_role.role != "Recruiter":
+    if request.user.profile.role != "recruiter":
         return redirect('jobs.index')
     
     applications = Application.objects.select_related('job').exclude(status='REJECTED').order_by('-created_at')
@@ -273,7 +218,7 @@ def hiring_stages_view(request):
 @require_http_methods(["POST"])
 def update_application_stage(request, application_id):
     """Update the stage of an application."""
-    if not request.user.profile or Role.objects.get(id=1).role != "Recruiter":
+    if not request.user.profile or request.user.profile.role != "recruiter":
         return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=403)
     
     try:
@@ -295,7 +240,7 @@ def update_application_stage(request, application_id):
 @login_required
 def application_details(request, application_id):
     """Get detailed information about an application."""
-    if not request.user.profile or Role.objects.get(id=1).role != "Recruiter":
+    if not request.user.profile or request.user.profile.role != "recruiter":
         return JsonResponse({'error': 'Unauthorized'}, status=403)
     
     try:
