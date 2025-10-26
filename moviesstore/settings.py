@@ -139,3 +139,14 @@ LOGIN_URL = '/accounts/login/'
 
 # Redirect users here after successful login
 LOGIN_REDIRECT_URL = '/jobs/'
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# SMTP Settings (currently disabled)
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'noreply@employmentplatform.com'
+# EMAIL_HOST_PASSWORD = 'temp'
+DEFAULT_FROM_EMAIL = 'Employment Platform <noreply@employmentplatform.com>'
+EMAIL_SUBJECT_PREFIX = '[Employment Platform] '

@@ -35,12 +35,13 @@ class JobPosting(models.Model):
         return f"{self.title} @ {self.company}"
 
 class Application(models.Model):
-    APPLIED = "APPLIED"; INTERVIEWING = "INTERVIEWING"; SELECTED = "SELECTED"; REJECTED = "REJECTED"
+    APPLIED = "APPLIED"; REVIEW = "REVIEW"; INTERVIEW = "INTERVIEW"; OFFER = "OFFER"; CLOSED = "CLOSED"
     STATUS_CHOICE = [
         (APPLIED, "Applied"),
-        (INTERVIEWING, "Interviewing"),
-        (SELECTED, "Selected for Position"),
-        (REJECTED, "Rejected"),
+        (REVIEW, "Review"),
+        (INTERVIEW, "Interview"),
+        (OFFER, "Offer"),
+        (CLOSED, "Closed"),
     ]
     id = models.AutoField(primary_key=True)
     job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name='applications')
@@ -58,3 +59,27 @@ class Application(models.Model):
 
     def __str__(self) -> str:
         return f"{self.candidate} → {self.job} [{self.status}]"
+
+
+class Message(models.Model):
+    id = models.AutoField(primary_key=True)
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='sent_messages'
+    )
+    recipient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='received_messages'
+    )
+    subject = models.CharField(max_length=140, blank=True)
+    body = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self) -> str:
+        return f"Message {self.id}: {self.sender} → {self.recipient} ({self.subject})"
