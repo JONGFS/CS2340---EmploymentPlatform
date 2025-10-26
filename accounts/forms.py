@@ -1,6 +1,7 @@
 from django.contrib.auth.forms import UserCreationForm
 from django.forms.utils import ErrorList
 from django.utils.safestring import mark_safe
+from django.contrib.auth.models import User
 from .models import Profile
 from django import forms
 
@@ -10,11 +11,20 @@ class CustomErrorList(ErrorList):
             return ''
         return mark_safe(''.join([f'<div class="alert alert-danger" role="alert">{e}</div>' for e in self]))
 class CustomUserCreationForm(UserCreationForm):
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={'class': 'form-control'})
+    )
+
     def __init__(self, *args, **kwargs):
         super(CustomUserCreationForm, self).__init__(*args, **kwargs)
-        for fieldname in ['username', 'password1', 'password2']:
+        for fieldname in ['username', 'email', 'password1', 'password2']:
             self.fields[fieldname].help_text = None 
             self.fields[fieldname].widget.attrs.update({'class': 'form-control'})
+    
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = UserCreationForm.Meta.fields + ('email',)
 class PrivacyForm(forms.ModelForm):
     class Meta:
         model = Profile
@@ -26,8 +36,10 @@ class PrivacyForm(forms.ModelForm):
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['headline', 'skills', 'education', 'work_experience', 'portfolio_link', 'linkedin_link', 'github_link', 'other_links']
+        fields = ['role', 'company', 'headline', 'skills', 'education', 'work_experience', 'portfolio_link', 'linkedin_link', 'github_link', 'other_links']
         widgets = {
+            'role': forms.Select(attrs={'class': 'form-control'}),
+            'company': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Company name (if you are a recruiter)'}),
             'headline': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Software Engineer, Marketing Specialist'}),
             'skills': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'List your skills (one per line or comma-separated)'}),
             'education': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Educational background and qualifications'}),

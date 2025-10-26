@@ -32,19 +32,24 @@ def signup(request):
     template_data = {}
     template_data['title'] = 'Sign Up'
     if request.method == 'GET':
+        role = request.GET.get('role', None)
         template_data['user_form'] = CustomUserCreationForm()
-        template_data['profile_form'] = ProfileForm()
+        if role:
+            template_data['profile_form'] = ProfileForm(initial={'role': role})
+        else:
+            template_data['profile_form'] = ProfileForm()
+        template_data['show_candidate_fields'] = (role != 'recruiter')
         return render(request, 'accounts/signup.html', {'template_data': template_data})
     elif request.method == 'POST':
         user_form = CustomUserCreationForm(request.POST, error_class=CustomErrorList)
         profile_form = ProfileForm(request.POST)
         
         if user_form.is_valid() and profile_form.is_valid():
-            # Save the user first
             user = user_form.save()
             
-            # Get the profile instance and update it with form data
             profile = user.profile
+            profile.role = profile_form.cleaned_data.get('role', profile.role)
+            profile.company = profile_form.cleaned_data.get('company', profile.company)
             profile.headline = profile_form.cleaned_data['headline']
             profile.skills = profile_form.cleaned_data['skills']
             profile.education = profile_form.cleaned_data['education']
@@ -59,8 +64,10 @@ def signup(request):
         else:
             template_data['user_form'] = user_form
             template_data['profile_form'] = profile_form
-            return render(request, 'accounts/signup.html',
-                {'template_data': template_data})
+            # preserve which fields should be visible based on posted role
+            posted_role = request.POST.get('role', 'candidate')
+            template_data['show_candidate_fields'] = (posted_role != 'recruiter')
+            return render(request, 'accounts/signup.html', {'template_data': template_data})
 
 @login_required
 def orders(request):

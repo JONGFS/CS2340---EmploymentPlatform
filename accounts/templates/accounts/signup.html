@@ -29,6 +29,11 @@
                   </div>
                 </div>
                 <div class="form-group mb-3">
+                  <label for="{{ template_data.user_form.email.id_for_label }}">Email</label>
+                  {{ template_data.user_form.email }}
+                  <small class="form-text text-muted">We'll use this email for account communication. Required.</small>
+                </div>
+                <div class="form-group mb-3">
                   <label for="{{ template_data.user_form.password2.id_for_label }}">Confirm Password</label>
                   {{ template_data.user_form.password2 }}
                 </div>
@@ -37,8 +42,24 @@
               <!-- Profile Information -->
               <div class="mb-4">
                 <h4 class="text-primary">Professional Profile</h4>
-                <p class="text-muted">Help recruiters learn about you by filling out your profile information.</p>
-                
+                <p class="text-muted">{% if template_data.show_candidate_fields %}Tell us about yourself to help recruiters find you.{% else %}Create your recruiter profile to start finding candidates.{% endif %}</p>
+
+                <div class="mb-3">
+                  <a class="btn btn-sm {% if template_data.show_candidate_fields %}btn-primary{% else %}btn-outline-primary{% endif %}" href="?role=candidate">Sign up as Candidate</a>
+                  <a class="btn btn-sm {% if not template_data.show_candidate_fields %}btn-primary{% else %}btn-outline-primary{% endif %}" href="?role=recruiter">Sign up as Recruiter</a>
+                </div>
+
+                {{ template_data.profile_form.role.as_hidden }}
+                {% if not template_data.show_candidate_fields %}
+                <div class="form-group mb-3">
+                  <label for="{{ template_data.profile_form.company.id_for_label }}">Company</label>
+                  {{ template_data.profile_form.company }}
+                  <small class="form-text text-muted">Your company name will be visible to candidates when you contact them.</small>
+                </div>
+                {% endif %}
+
+                {% if template_data.show_candidate_fields %}
+                <div>
                 <div class="form-group mb-3">
                   <label for="{{ template_data.profile_form.headline.id_for_label }}">Professional Headline</label>
                   {{ template_data.profile_form.headline }}
@@ -89,6 +110,7 @@
                   {{ template_data.profile_form.other_links }}
                   <small class="form-text text-muted">Any other relevant links (portfolio, blog, etc.)</small>
                 </div>
+                {% endif %}
               </div>
 
               <div class="text-center">
