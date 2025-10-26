@@ -133,3 +133,9 @@ STATICFILES_DIRS = [
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+
+# Redirect unauthenticated users to login
+LOGIN_URL = '/accounts/login/'
+
+# Redirect users here after successful login
+LOGIN_REDIRECT_URL = '/jobs/'

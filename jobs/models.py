@@ -8,6 +8,10 @@ class Job(models.Model):
     salaryRange = models.TextField()
     remote = models.TextField()
     visaSponsorship = models.TextField()
+
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+
     def __str__(self):
         return str(self.id) + '-' + self.title
 class Role(models.Model):

@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h2>Job Map</h2>
+
+<div id="map" style="height: 500px; border-radius: 10px;"></div>
+
+<a href="{% url 'jobs.index' %}" class="btn btn-secondary mt-3">← Back to Jobs</a>
+
+
+<!-- Leaflet CSS + JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- Custom JS -->
+<script src="{% static 'jobs/map.js' %}"></script>
+{% endblock %}
