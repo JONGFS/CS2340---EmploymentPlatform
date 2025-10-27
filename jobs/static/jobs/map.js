@@ -3,6 +3,7 @@
 let map;
 let markers = [];
 let currentLocationMarker;
+let radiusCircle;
 
 document.addEventListener("DOMContentLoaded", function () {
     // Initialize the map
@@ -18,19 +19,23 @@ document.addEventListener("DOMContentLoaded", function () {
     filterControl.onAdd = function () {
         const div = L.DomUtil.create('div', 'location-filter leaflet-bar');
         div.innerHTML = `
-            <div class="p-2 bg-white" style="min-width: 220px;">
-                <input type="text" id="locationInput" class="form-control mb-2" placeholder="Enter your location">
-                <select id="distanceFilter" class="form-control mb-2">
-                    <option value="">Select distance</option>
-                    <option value="25">Within 25 miles</option>
-                    <option value="50">Within 50 miles</option>
-                </select>
-                <button onclick="filterByLocation()" class="btn btn-primary btn-sm w-100">Filter Jobs</button>
-                <button onclick="resetFilter()" class="btn btn-secondary btn-sm w-100 mt-2">Reset Filter</button>
-            </div>
-        `;
-        return div;
-    };
+    <div class="p-2 bg-white" style="min-width: 240px;">
+      <input type="text" id="locationInput" class="form-control mb-2" placeholder="Enter your location">
+
+      <select id="distanceFilter" class="form-control mb-2">
+        <option value="">Select distance</option>
+        <option value="10">Within 10 miles</option>
+        <option value="25">Within 25 miles</option>
+        <option value="50">Within 50 miles</option>
+      </select>
+      
+      <button onclick="filterByLocation()" class="btn btn-primary btn-sm w-100">Filter Jobs</button>
+      <button onclick="resetFilter()" class="btn btn-secondary btn-sm w-100 mt-2">Reset Filter</button>
+    </div>`;
+    L.DomEvent.disableClickPropagation(div);
+    return div;
+    };    
+    
     filterControl.addTo(map);
 
     // Load initial jobs
@@ -85,27 +90,39 @@ function filterByLocation(predefinedLat, predefinedLng) {
     const distance = document.getElementById('distanceFilter').value;
     
     if (!locationInput || !distance) {
-        alert('Please enter both location and distance');
+        alert('Please enter a location and select a distance');
         return;
     }
+    
+    const applyFilterHelper = (lat, lng) => applyFilter(lat, lng, distance);
 
     if (predefinedLat && predefinedLng) {
         // Use predefined coordinates (e.g., from geolocation)
-        applyFilter(predefinedLat, predefinedLng, distance);
+        applyFilterHelper(predefinedLat, predefinedLng);
     } else {
         // Use OpenStreetMap Nominatim API to get coordinates from location input
+        console.log('Fetching location for:', locationInput);
         fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationInput)}`)
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('Geocoding data:', data);
                 if (data.length === 0) {
-                    alert('Location not found. Please try a different location.');
+                    alert(`Location "${locationInput}" not found. Please try a different location.`);
                     return;
                 }
-                applyFilter(parseFloat(data[0].lat), parseFloat(data[0].lon), distance);
+                const coords = { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+                console.log('Coordinates found:', coords);
+                applyFilterHelper(coords.lat, coords.lon);
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('Error finding location. Please try again.');
+                console.error('Geocoding error:', error);
+                alert(`Error finding location "${locationInput}": ${error.message}. Please try again.`);
             });
     }
 }
@@ -125,26 +142,38 @@ function applyFilter(lat, lng, distance) {
     }).addTo(map);
 
     // Filter and show only jobs within the selected distance
+    if (radiusCircle) { 
+        radiusCircle.remove();
+    }
+    radiusCircle = L.circle([lat, lng], { 
+        radius: distance * 1609.344, // Convert miles to meters
+        color: '#3388ff',
+        fillColor: '#3388ff',
+        fillOpacity: 0.1,
+        weight: 2
+    }).addTo(map);
+  
     markers.forEach(marker => {
-        const jobLat = marker.jobData.latitude;
-        const jobLng = marker.jobData.longitude;
-        const distanceToJob = calculateDistance(lat, lng, jobLat, jobLng);
-        
-        if (distanceToJob <= distance) {
+        const d = calculateDistance(lat, lng, marker.jobData.latitude, marker.jobData.longitude);
+        if (d <= distance) {
             marker.addTo(map);
         } else {
             marker.remove();
         }
     });
-
-    // Center map on user location with appropriate zoom
-    map.setView([lat, lng], 10);
+  
+    map.setView([lat, lng], Math.max(8, Math.min(12, Math.floor(12 - Math.log2(distance/10)))));
 }
 
 function resetFilter() {
     // Remove current location marker
     if (currentLocationMarker) {
         currentLocationMarker.remove();
+    }
+    
+    // Remove radius circle
+    if (radiusCircle) {
+        radiusCircle.remove();
     }
 
     // Reset form inputs
@@ -174,3 +203,5 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 function toRad(degrees) {
     return degrees * (Math.PI / 180);
 }
+
+

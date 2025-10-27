@@ -7,6 +7,32 @@ from django.views.decorators.http import require_http_methods
 import json
 
 
+def geocode_location(location_string):
+    """Convert location string to lat/lng using Nominatim API."""
+    import urllib.parse
+    import urllib.request
+    import ssl
+    
+    try:
+        encoded_location = urllib.parse.quote(location_string)
+        url = f"https://nominatim.openstreetmap.org/search?format=json&q={encoded_location}"
+        req = urllib.request.Request(url, headers={'User-Agent': 'EmploymentPlatform/1.0'})
+        
+        # Create SSL context that doesn't verify certificates
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        
+        with urllib.request.urlopen(req, timeout=5, context=ctx) as response:
+            data = json.loads(response.read().decode())
+            if data and len(data) > 0:
+                return float(data[0]['lat']), float(data[0]['lon'])
+    except Exception as e:
+        print(f"Geocoding error: {e}")
+    
+    return None, None
+
+
 jobs_data = [
     {'title': 'Software Engineer', 'skills': 'Python, Django, PostgreSQL', 'location': 'San Francisco, CA',
      'salaryRange': '$120,000 - $160,000', 'remote': 'Hybrid', 'visaSponsorship': 'Yes',
@@ -54,13 +80,18 @@ def index(request):
         visa_sponsorship = request.POST.get("visa")
 
         if all(val and val.strip() for val in [title, skills, location, salary_range, remote_on_site, visa_sponsorship]):
+            # Geocode the location
+            latitude, longitude = geocode_location(location)
+            
             Job.objects.create(
                 title=title,
                 skills=skills,
                 location=location,
                 salaryRange=salary_range,
                 remote=remote_on_site,
-                visaSponsorship=visa_sponsorship
+                visaSponsorship=visa_sponsorship,
+                latitude=latitude,
+                longitude=longitude
             )
             from django.contrib import messages
             messages.success(request, 'Job posting created successfully')
@@ -154,7 +185,14 @@ def edit_job(request, id):
 
         if updated_title != "" and updated_skills != "" and updated_location != "" and updated_salary_range != "" and updated_remote_onsite != "" and updated_visa_sponsorship != "":
             
-            updated_job  = Job.objects.get(id = id)
+            updated_job = Job.objects.get(id=id)
+            
+            # If location changed, re-geocode
+            if updated_job.location != updated_location:
+                latitude, longitude = geocode_location(updated_location)
+                updated_job.latitude = latitude
+                updated_job.longitude = longitude
+            
             updated_job.title = updated_title
             updated_job.skills = updated_skills
             updated_job.location = updated_location
@@ -255,3 +293,4 @@ def application_details(request, application_id):
         return JsonResponse(data)
     except Application.DoesNotExist:
         return JsonResponse({'error': 'Application not found'}, status=404)
+
