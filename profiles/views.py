@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.db.models import Q, Count
 
 from .models import Application
-from accounts.models import Profile
+from accounts.models import Profile, Job,Recommendation
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
 from django.urls import reverse
@@ -47,8 +47,25 @@ def candidate_search(request):
             Q(education__icontains=term) |
             Q(work_experience__icontains=term)
         )
-
-    return render(request, 'candidate_search.html', {'candidates': qs, 'is_recruiter': is_recruiter})
+    if request.method == "POST":
+        if 'save_candidate_search' in request.POST:
+            job_id = request.POST.get('save_candidate_search')
+            job_saved_search = Job.objects.get(id=job_id)
+            job_saved_search.savedCandidateSearch = True
+            job_saved_search.save()
+    elif 'remove_candidate_search' in request.POST:
+        job_id = request.POST.get('remove_candidate_search')
+        job_saved_search = Job.objects.get(id=job_id)
+        job_saved_search.savedCandidateSearch = False
+        job_saved_search.save()
+    # Get recommendations for each job
+    seeker_recommendations = []
+    for job in Job.objects.all():
+        recommended_users = job.get_recommended_seekers()
+        full_job_name = str(job.id) + '-' + job.title
+        seeker_recommendations.append((job.id, job.savedCandidateSearch, full_job_name, job.skills, recommended_users))
+    return render(request, 'candidate_search.html', {'candidates': qs, 'is_recruiter': is_recruiter, 
+                                                     'recs': seeker_recommendations})
 
 
 @login_required

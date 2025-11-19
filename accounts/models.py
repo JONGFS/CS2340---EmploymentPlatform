@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from helpers import parse_skills_string
 
 class Profile(models.Model):
     PRIVACY_CHOICES = [
@@ -30,6 +31,8 @@ class Profile(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s profile"
+    def get_recommended_jobs(self):
+        return Job.objects.filter(recommendations__profile=self)
 
 @receiver(post_save, sender=User)
 def create_or_update_user_profile(sender, instance, created, **kwargs):
@@ -42,3 +45,27 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
     except Exception:
         # In the unlikely event save fails, avoid crashing the whole request.
         pass
+
+class Job(models.Model):
+    id = models.AutoField(primary_key = True)
+    title = models.TextField()
+    skills = models.TextField()
+    location = models.TextField()
+    salaryRange = models.TextField()
+    remote = models.TextField()
+    visaSponsorship = models.TextField()
+    savedCandidateSearch = models.BooleanField(default=False)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    def __str__(self):
+        return str(self.id) + '-' + self.title
+    def get_recommended_seekers(self):
+        return Profile.objects.filter(recommendations__job=self)
+
+class Recommendation(models.Model):
+    job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name='recommendations')
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='recommendations')
+    class Meta:
+        unique_together = ['profile', 'job']
+    def __str__(self):
+        return f"{self.profile.user.username} -> {str(self.job.id) + '-' + self.job.title}"
