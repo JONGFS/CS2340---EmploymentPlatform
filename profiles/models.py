@@ -1,6 +1,10 @@
 from django.db import models
 from django.conf import settings
 from accounts.models import Job
+from django.contrib import admin
+from django.http import HttpResponse
+from django.utils import timezone
+import csv
 class Skill(models.Model):
     name = models.CharField(max_length=64, unique=True)
 
@@ -83,3 +87,4 @@ class Message(models.Model):
 
     def __str__(self) -> str:
         return f"Message {self.id}: {self.sender} → {self.recipient} ({self.subject})"
+
