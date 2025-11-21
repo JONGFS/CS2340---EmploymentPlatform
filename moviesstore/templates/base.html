@@ -27,15 +27,18 @@
             <!--<a class="nav-link" href="{% url 'home.about' %}">About</a>  --> 
             <!--<a class="nav-link" href="{% url 'movies.index' %}">Movies</a> --->
             <a class="nav-link" href="{% url 'jobs.index' %}">Jobs</a>
-            {% if user.profile.role == 'candidate' %}
+            {% if user.is_authenticated and user.profile.role == 'candidate' %}
             <a class="nav-link" href="{% url 'profiles:my_applications' %}">Applications</a>
-            <a class="nav-link" href="{% url 'profiles:inbox' %}">Messages</a>
-            {% elif user.profile.role == 'recruiter' %}
-            <a class="nav-link" href="{% url 'profiles:candidate_search' %}">Candidate Search</a>
+             {% elif user.is_authenticated and user.profile.role == 'recruiter' %}
+             <a class="nav-link" href="{% url 'profiles:candidate_search' %}">Candidate Recs & Search</a>
             {% endif %}
-            <div class="vr bg-white mx-2 d-none d-lg-block"></div>
+            {% if user.is_authenticated and user.profile.role == 'candidate'%}
+            <div class="vr bg-white mx-2 d-none d-lg-block"></div>   
+            <a class="nav-link" href="{% url 'profiles:inbox' %}">Messages</a>
+            {%  elif user.is_authenticated and user.profile.role == 'recruiter' %}
+            <a class="nav-link" href="{% url 'profiles:inbox' %}">Notifications</a>
+            {% endif %}
             {% if user.is_authenticated %}
-            <a class="nav-link" href="{% url 'accounts.orders' %}">Orders</a>
             <li class="nav-item">
                 <a class="nav-link privacy-tab" href="/accounts/privacy/">Privacy Settings</a>
             </li>

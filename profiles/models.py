@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from jobs.models import Job
+from accounts.models import Job
 class Skill(models.Model):
     name = models.CharField(max_length=64, unique=True)
 

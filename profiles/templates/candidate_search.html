@@ -1,6 +1,65 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container py-4">
+  <h1>Job Seeker Recommendations</h1>
+     <p>            </p> 
+       {% for job_id, candidate_search_saved, jobname, skills, list_of_jobs in recs %}
+      <div class="container py-4">   
+        <form method="POST">
+          {% csrf_token %}
+
+         {% if candidate_search_saved %} 
+            <h5>{{ jobname  }} <button class="btn btn-danger btn-sm" type="submit" name="remove_candidate_search" value="{{ job_id }} ">Remove Candidate Search</button> </h5>
+         {% else %}
+            <h5>{{ jobname  }} <button class="btn btn-primary btn-sm" type="submit" name="save_candidate_search" value="{{ job_id }} ">Save Candidate Search</button> </h5>
+         {% endif %}
+       <h7> <strong>Skills:</strong> {{ skills }} </h7>
+          </form>     
+      </div>
+
+        <table class="table table-striped align-middle">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Headline</th>
+            <th>Education</th>
+            <th>Work Experience</th>
+            <th>Skills</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for c in list_of_jobs %}
+
+          <tr>
+            <td>{{ c.user.username }}</td>
+            <td>{{ c.headline|default:"—" }}</td>
+            <td>{{ c.education|default:"—"|truncatechars:80 }}</td>
+            <td>{{ c.work_experience|default:"—"|truncatechars:80 }}</td>
+            <td>{{ c.skills|default:"—"|linebreaksbr }}</td>
+            <td class="text-nowrap">
+              {% if is_recruiter %}
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'profiles:compose_message_to' c.user.id %}">Message</a>
+                <a class="btn btn-sm btn-outline-secondary" href="{% url 'profiles:compose_email_to' c.user.id %}">Email</a>
+              {% else %}
+                <span class="text-muted">(Recruiters only)</span>
+              {% endif %}
+            </td>
+          </tr>
+
+        {% empty %}
+          <!-- <tr><td colspan="6">No job seekers found.</td></tr> -->
+    
+          {% endfor %}
+          </tbody>
+        </table>
+
+    {% endfor %}
+</div>
+
+
+
+<div class="container py-4">
   <h1>Job Seeker Search</h1>
 
   <form method="get" class="row g-2 my-3">

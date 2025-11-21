@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Job
+from accounts.models import Job,  Recommendation,Profile
+from helpers import is_match
 from django.contrib.auth.decorators import login_required
 from profiles.models import Application
 from django.http import JsonResponse
@@ -34,30 +35,27 @@ def geocode_location(location_string):
 
 
 jobs_data = [
-    {'title': 'Software Engineer', 'skills': 'Python, Django, PostgreSQL', 'location': 'San Francisco, CA',
-     'salaryRange': '$120,000 - $160,000', 'remote': 'Hybrid', 'visaSponsorship': 'Yes',
-     'latitude': 37.7749, 'longitude': -122.4194},
-
-    {'title': 'Frontend Developer', 'skills': 'React, JavaScript, CSS, HTML', 'location': 'New York, NY',
-     'salaryRange': '$100,000 - $140,000', 'remote': 'Remote', 'visaSponsorship': 'No',
-     'latitude': 40.7128, 'longitude': -74.0060},
-
-    {'title': 'Data Scientist', 'skills': 'Python, Machine Learning, SQL, Pandas', 'location': 'Austin, TX',
-     'salaryRange': '$110,000 - $150,000', 'remote': 'Yes', 'visaSponsorship': 'Yes',
-     'latitude': 30.2672, 'longitude': -97.7431},
-
-    {'title': 'DevOps Engineer', 'skills': 'AWS, Docker, Kubernetes, Jenkins', 'location': 'Seattle, WA',
-     'salaryRange': '$130,000 - $170,000', 'remote': 'Hybrid', 'visaSponsorship': 'No',
-     'latitude': 47.6062, 'longitude': -122.3321},
-
-    {'title': 'Product Manager', 'skills': 'Agile, Jira, Product Strategy, Communication', 'location': 'Boston, MA',
-     'salaryRange': '$115,000 - $155,000', 'remote': 'No', 'visaSponsorship': 'Yes',
-     'latitude': 42.3601, 'longitude': -71.0589},
+   {'title': 'Software Engineer', 'skills': 'Python, Django, PostgreSQL', 'location': 'San Francisco, CA',
+ 'salaryRange': '$120,000 - $160,000', 'remote': 'Hybrid', 'visaSponsorship': 'Yes', 'savedCandidateSearch':False,
+ 'latitude': 37.7749, 'longitude': -122.4194},
+ {'title': 'Frontend Developer', 'skills': 'React, JavaScript, CSS, HTML', 'location': 'New York, NY',
+ 'salaryRange': '$100,000 - $140,000', 'remote': 'Remote', 'visaSponsorship': 'No','savedCandidateSearch':False,
+ 'latitude': 40.7128, 'longitude': -74.0060},
+ {'title': 'Data Scientist', 'skills': 'Python, Machine Learning, SQL, Pandas', 'location': 'Austin, TX',
+ 'salaryRange': '$110,000 - $150,000', 'remote': 'Yes', 'visaSponsorship': 'Yes','savedCandidateSearch':False,
+ 'latitude': 30.2672, 'longitude': -97.7431},
+ {'title': 'DevOps Engineer', 'skills': 'AWS, Docker, Kubernetes, Jenkins', 'location': 'Seattle, WA',
+ 'salaryRange': '$130,000 - $170,000', 'remote': 'Hybrid', 'visaSponsorship': 'No','savedCandidateSearch':False,
+ 'latitude': 47.6062, 'longitude': -122.3321},
+ {'title': 'Product Manager', 'skills': 'Agile, Jira, Product Strategy, Communication', 'location': 'Boston, MA',
+ 'salaryRange': '$115,000 - $155,000', 'remote': 'No', 'visaSponsorship': 'Yes','savedCandidateSearch':False,
+ 'latitude': 42.3601, 'longitude': -71.0589},
 ]
 
 
 def index(request):
     template_data = {}
+
 
     if not hasattr(request.user, "profile"):
         return redirect("/accounts/login/")
@@ -69,8 +67,20 @@ def index(request):
     jobs = Job.objects.all()
     if not jobs.exists():
         for job_dict in jobs_data:
-            Job.objects.create(**job_dict)
+            job = Job.objects.create(**job_dict)
+            all_user_profiles = Profile.objects.all()
+            for user_profile in all_user_profiles:
+                if user_profile.role == 'candidate':
+                    if is_match(user_profile, job):
+                        Recommendation.objects.get_or_create(profile=user_profile, job=job)
 
+    for job in jobs:
+        all_user_profiles = Profile.objects.all()
+        for user_profile in all_user_profiles:
+            if user_profile.role == 'candidate':
+                if is_match(user_profile, job):
+                    Recommendation.objects.get_or_create(profile=user_profile, job=job)
+        
     if request.method == 'POST' and template_data["role"] == "Recruiter":
         title = request.POST.get('title')
         skills = request.POST.get("skills")
@@ -82,6 +92,7 @@ def index(request):
         if all(val and val.strip() for val in [title, skills, location, salary_range, remote_on_site, visa_sponsorship]):
             # Geocode the location
             latitude, longitude = geocode_location(location)
+
             
             Job.objects.create(
                 title=title,
@@ -93,6 +104,12 @@ def index(request):
                 latitude=latitude,
                 longitude=longitude
             )
+            all_user_profiles = Profile.objects.all()
+            for user_profile in all_user_profiles:
+                  if user_profile.role == 'candidate':
+                      if is_match(user_profile, job):
+                        Recommendation.objects.get_or_create(profile=user_profile, job=job)
+            
             from django.contrib import messages
             messages.success(request, 'Job posting created successfully')
             return redirect('jobs.index')
@@ -154,16 +171,8 @@ def index(request):
     template_data["My_skills"] = user_skills
     
     list_of_recommended_jobs = []
-    for job in Job.objects.all():
-        job_skills_string = job.skills
-
-        job_skills= []
-        if '\n' in job_skills_string:
-            job_skills = set(skill.strip().lower() for skill in job_skills_string.split('\n'))
-        else:
-            job_skills = set(skill.strip().lower() for skill in job_skills_string.split(','))
-        
-        if (user_skills & job_skills) and (job.id not in applied_job_ids): 
+    for job in request.user.profile.get_recommended_jobs():
+        if job.id not in applied_job_ids:
             list_of_recommended_jobs.append(job)
     template_data["recommended_jobs"] = list_of_recommended_jobs
     return render(request, 'jobs/index.html',
