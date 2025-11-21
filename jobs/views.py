@@ -177,7 +177,7 @@ def index(request):
             list_of_recommended_jobs.append(job)
     template_data["recommended_jobs"] = list_of_recommended_jobs
     return render(request, 'jobs/index.html',
-                  {'template_data' : template_data})
+                  {'template_data' : template_data, 'user': request.user})
 
 
 def edit_job(request, id):
@@ -366,3 +366,22 @@ def applicants_api_view(request):
                 'skills': cand.skills or "",
             })
     return JsonResponse({'candidates': data})
+
+@login_required
+def delete_job(request, id):
+    """Delete a job posting - only accessible to superusers."""
+    if not request.user.is_superuser:
+        from django.contrib import messages
+        messages.error(request, 'You do not have permission to delete job postings.')
+        return redirect('jobs.index')
+    
+    job = get_object_or_404(Job, id=id)
+    
+    if request.method == 'POST':
+        job.delete()
+        from django.contrib import messages
+        messages.success(request, f'Job posting "{job.title}" has been successfully deleted.')
+        return redirect('jobs.index')
+    
+    # If GET request, render confirmation page
+    return render(request, 'jobs/delete_job.html', {'job': job})
