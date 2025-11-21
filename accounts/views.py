@@ -9,6 +9,11 @@ from .forms import PrivacyForm
 from .models import Profile, Job, Recommendation
 from helpers import parse_skills_string, is_match
 from profiles.models import Message
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib import messages
+from django.views.decorators.http import require_http_methods
+from django.http import HttpResponseForbidden, JsonResponse
+from django.contrib.auth.models import User
 
 @login_required
 def logout(request):
@@ -61,6 +66,8 @@ def signup(request):
             profile.linkedin_link = profile_form.cleaned_data['linkedin_link']
             profile.github_link = profile_form.cleaned_data['github_link']
             profile.other_links = profile_form.cleaned_data['other_links']
+            # Save free-text location provided at signup (if any)
+            profile.location = profile_form.cleaned_data.get('location', profile.location)
             profile.save()
             Profile.objects.get_or_create(user = user, privacy = 'public', role = profile.role, company = profile.company,
                                           headline = profile.headline, 
@@ -70,7 +77,8 @@ def signup(request):
                                           portfolio_link = profile.portfolio_link,
                                           linkedin_link = profile.linkedin_link, 
                                           github_link = profile.github_link,
-                                          other_links = profile.other_links)
+                                          other_links = profile.other_links,
+                                          location = profile.location)
             #if there is a match - this is a new match
             # notify the recruiter in the portal via Messages tab
             if profile.role == 'candidate':  # When job seeker gets added:
@@ -112,5 +120,75 @@ def privacy_settings(request):
         form = PrivacyForm(instance=profile)
         template_data = {'title': 'Privacy Settings', 'form': form}
     return render(request, 'accounts/privacy.html', {'template_data': template_data})
+
+
+@user_passes_test(lambda u: u.is_staff)
+def manage_users(request):
+    """Display a simple admin page listing users and their roles. Superuser-only."""
+    users = User.objects.select_related('profile').all().order_by('username')
+    return render(request, 'accounts/manage_users.html', {'users': users, 'template_data': {'title': 'Manage Users'}})
+
+
+@user_passes_test(lambda u: u.is_staff)
+@require_http_methods(["POST"])
+def update_user_role(request):
+    """Handle AJAX or form POST to update a user's profile.role.
+
+    Expects POST data: user_id, role (one of candidate|recruiter).
+    Returns JSON with success flag and new role.
+    """
+    user_id = request.POST.get('user_id')
+    new_role = request.POST.get('role')
+    if not user_id or new_role not in dict(Profile.ROLE_CHOICES).keys():
+        return JsonResponse({'success': False, 'error': 'Invalid input'}, status=400)
+    try:
+        user = User.objects.get(id=int(user_id))
+        profile = user.profile
+        profile.role = new_role
+        profile.save()
+        messages.success(request, f"Updated role for {user.username} to {new_role}")
+        return JsonResponse({'success': True, 'user_id': user_id, 'new_role': new_role})
+    except User.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@user_passes_test(lambda u: u.is_staff)
+@require_http_methods(["POST"])
+def toggle_user_active(request):
+    """Toggle a user's is_active flag. POST: user_id, active ('true'|'false')"""
+    user_id = request.POST.get('user_id')
+    active = request.POST.get('active')
+    if not user_id or active not in ['true', 'false']:
+        return JsonResponse({'success': False, 'error': 'Invalid input'}, status=400)
+    try:
+        user = User.objects.get(id=int(user_id))
+        user.is_active = (active == 'true')
+        user.save()
+        return JsonResponse({'success': True, 'user_id': user_id, 'is_active': user.is_active})
+    except User.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@user_passes_test(lambda u: u.is_staff)
+@require_http_methods(["POST"])
+def toggle_user_staff(request):
+    """Toggle a user's is_staff flag. POST: user_id, staff ('true'|'false')"""
+    user_id = request.POST.get('user_id')
+    staff = request.POST.get('staff')
+    if not user_id or staff not in ['true', 'false']:
+        return JsonResponse({'success': False, 'error': 'Invalid input'}, status=400)
+    try:
+        user = User.objects.get(id=int(user_id))
+        user.is_staff = (staff == 'true')
+        user.save()
+        return JsonResponse({'success': True, 'user_id': user_id, 'is_staff': user.is_staff})
+    except User.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 

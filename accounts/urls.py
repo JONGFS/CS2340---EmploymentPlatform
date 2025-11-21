@@ -7,4 +7,6 @@ urlpatterns = [
     path('logout/', views.logout, name='accounts.logout'),
     path('orders/', views.orders, name='accounts.orders'),
     path('privacy/', views.privacy_settings, name='accounts.privacy'),
+    # User management moved to Django admin for platform administrators
+    # Deprecated: staff-facing manage-users endpoints removed in favor of admin
 ]

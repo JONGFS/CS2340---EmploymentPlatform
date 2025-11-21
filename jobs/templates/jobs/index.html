@@ -43,10 +43,10 @@
           </div>
           {% if template_data.role == "Recruiter" %}
               <a class = "btn btn-primary"
-                href = "{% url 'jobs.edit_job' id=job.id %}" >Edit
+                href = "{% url 'jobs:edit_job' id=job.id %}" >Edit
               </a>
           {% elif template_data.role == "Job Seeker" %}
-              <a class="btn btn-success" href="{% url 'jobs.apply_job' id=job.id %}">Apply</a>
+              <a class="btn btn-success" href="{% url 'jobs:apply_job' id=job.id %}">Apply</a>
           {% endif %}
         </div>
 
@@ -78,13 +78,16 @@
         </div>
     </div>
 
-<a href="{% url 'jobs.map' %}" class="btn btn-primary" style="margin: 10px 0;">
+<a href="{% url 'jobs:map' %}" class="btn btn-primary" style="margin: 10px 0;">
   View Jobs on Map
 </a>
 
 {% if template_data.role == "Recruiter" %}
-<a href="{% url 'jobs.hiring_stages' %}" class="btn btn-success" style="margin: 10px 0 10px 10px;">
+<a href="{% url 'jobs:hiring_stages' %}" class="btn btn-success" style="margin: 10px 0 10px 10px;">
   Manage Hiring Stages
+</a>
+<a href="{% url 'jobs:applicants_map' %}" class="btn btn-info" style="margin: 10px 0 10px 10px;">
+  View Applicants Map
 </a>
 {% endif %}
 
@@ -172,10 +175,10 @@
           </div>
           {% if template_data.role == "Recruiter" %}
               <a class = "btn btn-primary"
-                href = "{% url 'jobs.edit_job' id=job.id %}" >Edit
+                href = "{% url 'jobs:edit_job' id=job.id %}" >Edit
               </a>
           {% elif template_data.role == "Job Seeker" %}
-              <a class="btn btn-success" href="{% url 'jobs.apply_job' id=job.id %}">Apply</a>
+              <a class="btn btn-success" href="{% url 'jobs:apply_job' id=job.id %}">Apply</a>
           {% endif %}
         </div>
 

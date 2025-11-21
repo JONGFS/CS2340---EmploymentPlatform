@@ -3,7 +3,8 @@ from accounts.models import Job,  Recommendation,Profile
 from helpers import is_match
 from django.contrib.auth.decorators import login_required
 from profiles.models import Application
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
+from accounts.models import Profile 
 from django.views.decorators.http import require_http_methods
 import json
 
@@ -303,3 +304,58 @@ def application_details(request, application_id):
     except Application.DoesNotExist:
         return JsonResponse({'error': 'Application not found'}, status=404)
 
+
+
+@login_required
+def applicants_map_view(request):
+    """Render the applicants map template — recruiter-only."""
+    if not hasattr(request.user, "profile"):
+        return redirect("/accounts/login/")
+    if request.user.profile.role != "recruiter":
+        # Non-recruiters should not access this page
+        return redirect('jobs.index')
+    return render(request, 'jobs/applicants_map.html', {})
+
+
+@login_required
+def applicants_api_view(request):
+    """
+    Return candidate (applicant) locations as JSON for clustering on the map.
+    If a candidate has a 'location' string but missing lat/lng, attempt to geocode
+    it and save coordinates (simple on-demand geocoding).
+    """
+    if not hasattr(request.user, "profile") or request.user.profile.role != "recruiter":
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    candidates = Profile.objects.filter(role='candidate')
+    data = []
+
+    for cand in candidates:
+        lat = cand.latitude
+        lon = cand.longitude
+        # If they gave a free-text location but no coordinates, try geocoding and save
+        if (lat is None or lon is None) and getattr(cand, 'location', None):
+            try:
+                new_lat, new_lon = geocode_location(cand.location)
+                # If geocoding succeeded, save to model
+                if new_lat is not None and new_lon is not None:
+                    cand.latitude = new_lat
+                    cand.longitude = new_lon
+                    cand.save(update_fields=['latitude', 'longitude'])
+                    lat, lon = new_lat, new_lon
+            except Exception as e:
+                # Ignore geocoding failures here — frontend will skip empty coords
+                print(f"Geocode fail for profile {cand.user.username}: {e}")
+        
+        if lat is not None and lon is not None:
+            data.append({
+                'username': cand.user.username,
+                'display_name': f"{cand.user.first_name} {cand.user.last_name}".strip() or cand.user.username,
+                'id': cand.user.id,
+                'location': cand.location or "",
+                'latitude': lat,
+                'longitude': lon,
+                'headline': cand.headline or "",
+                'skills': cand.skills or "",
+            })
+    return JsonResponse({'candidates': data})

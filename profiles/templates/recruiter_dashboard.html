@@ -8,7 +8,7 @@
       <div class="card">
         <div class="card-body">
           <h5 class="card-title">Quick Actions</h5>
-          <a href="{% url 'jobs.index' %}" class="btn btn-primary">Post New Job</a>
+          <a href="{% url 'jobs:index' %}" class="btn btn-primary">Post New Job</a>
           <a href="{% url 'profiles:candidate_search' %}" class="btn btn-outline-primary">Search Candidates</a>
         </div>
       </div>
@@ -66,7 +66,7 @@
       {% empty %}
       <div class="alert alert-info">
         You haven't posted any jobs yet. 
-        <a href="{% url 'jobs.index' %}" class="alert-link">Create your first job posting</a>
+  <a href="{% url 'jobs:index' %}" class="alert-link">Create your first job posting</a>
       </div>
       {% endfor %}
     </div>

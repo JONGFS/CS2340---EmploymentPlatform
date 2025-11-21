@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Applicant Clusters{% endblock %}
+
+{% block content %}
+<h2>Applicant Locations — Clusters</h2>
+<p>Only visible to recruiters. Zoom & pan the map. Click clusters to expand. Click a marker for candidate details.</p>
+
+<div id="map" style="height: 600px; width: 100%; margin-bottom: 1rem;"></div>
+
+<div id="top-locations" class="mb-3">
+    <h5>Most Candidates are from: <span id="top-location-list">Calculating...</span></h5>
+</div>
+
+<!-- An optional client-side radius filter -->
+<label for="radius_km">Show candidates within radius (km) of center:</label>
+<input id="radius_km" type="number" min="0" step="1" value="" placeholder="leave blank for all" />
+<button id="apply_radius">Apply Filter</button>
+<button id="clear_radius">Clear Filter</button>
+
+<!-- Leaflet CSS & JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- MarkerCluster plugin -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize map
+    var map = L.map('map').setView([39.8283, -98.5795], 4); // default: center of USA
+
+    // Tile layer (OpenStreetMap)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Create MarkerClusterGroup
+    var markers = L.markerClusterGroup();
+    map.addLayer(markers);
+
+    // Helper: haversine distance in km between two lat/lng
+    function haversineKm(lat1, lon1, lat2, lon2) {
+        var R = 6371; // km
+        var dLat = (lat2 - lat1) * Math.PI / 180;
+        var dLon = (lon2 - lon1) * Math.PI / 180;
+        var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
+    var allCandidateMarkers = []; // keep for filtering
+
+    function loadCandidates() {
+        markers.clearLayers();
+        allCandidateMarkers = [];
+        fetch("{% url 'jobs:applicants_api' %}")
+            .then(response => {
+                if (!response.ok) throw new Error("Network response was not OK");
+                return response.json();
+            })
+            .then(data => {
+                // data.candidates is an array of {username, display_name, id, location, latitude, longitude, ...}
+                var candidates = data.candidates || [];
+                // Map to count location occurrences (fallback to rounded lat/lon if free-text missing)
+                const locationCounts = {};
+
+                candidates.forEach(function(c) {
+                    var lat = parseFloat(c.latitude);
+                    var lon = parseFloat(c.longitude);
+                    if (isNaN(lat) || isNaN(lon)) return;
+                    var popupHtml = `<strong>${c.display_name}</strong><br/>${c.location || ''}<br/><em>${c.headline}</em><br/>Skills: ${c.skills ? c.skills.split('\\n').slice(0,3).join(', ') : 'N/A'}`;
+                    var marker = L.marker([lat, lon]).bindPopup(popupHtml);
+                    allCandidateMarkers.push({ marker: marker, lat: lat, lon: lon });
+                    markers.addLayer(marker);
+
+                    // Use canonical location string when available, else rounded lat/lon
+                    var locKey = (c.location && c.location.trim()) ? c.location.trim() : (Math.round(lat*10)/10) + ',' + (Math.round(lon*10)/10);
+                    locationCounts[locKey] = (locationCounts[locKey] || 0) + 1;
+                });
+                // Build a sorted list of top locations
+                var entries = Object.entries(locationCounts);
+                entries.sort((a,b) => b[1] - a[1]);
+                if (entries.length > 0) {
+                    // Show top 3 locations
+                    var topN = entries.slice(0,3).map(e => `${e[0]} (${e[1]})`).join(' • ');
+                    document.getElementById('top-location-list').innerText = topN;
+                } else {
+                    document.getElementById('top-location-list').innerText = 'No candidate locations available';
+                }
+                // If there are markers, fit bounds
+                if (allCandidateMarkers.length > 0) {
+                    var group = L.featureGroup(allCandidateMarkers.map(m => m.marker));
+                    map.fitBounds(group.getBounds().pad(0.2));
+                }
+            })
+            .catch(err => {
+                console.error("Failed to load candidates:", err);
+                alert("Failed to load candidate locations.");
+            });
+    }
+
+    loadCandidates();
+
+    // Client-side radius filtering — filters markers to those within radius_km of map center
+    document.getElementById('apply_radius').addEventListener('click', function() {
+        var radiusKm = parseFloat(document.getElementById('radius_km').value);
+        if (isNaN(radiusKm) || radiusKm <= 0) {
+            alert("Enter a positive radius in kilometers.");
+            return;
+        }
+        var center = map.getCenter();
+        markers.clearLayers();
+        allCandidateMarkers.forEach(function(obj) {
+            var d = haversineKm(center.lat, center.lng, obj.lat, obj.lon);
+            if (d <= radiusKm) {
+                markers.addLayer(obj.marker);
+            }
+        });
+    });
+
+    document.getElementById('clear_radius').addEventListener('click', function() {
+        document.getElementById('radius_km').value = '';
+        markers.clearLayers();
+        allCandidateMarkers.forEach(function(obj) {
+            markers.addLayer(obj.marker);
+        });
+        if (allCandidateMarkers.length > 0) {
+            var group = L.featureGroup(allCandidateMarkers.map(m => m.marker));
+            map.fitBounds(group.getBounds().pad(0.2));
+        }
+    });
+
+});
+</script>
+{% endblock %}

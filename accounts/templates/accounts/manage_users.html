@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+  <h2>Manage Users</h2>
+  <p>Accessible to staff users. Change a user's role between 'Job Seeker' (candidate) and 'Recruiter', toggle staff or active status.</p>
+
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Current Role</th>
+        <th>Staff</th>
+        <th>Active</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+      <tr id="user-row-{{ user.id }}">
+        <td>{{ user.username }}</td>
+        <td>{{ user.email }}</td>
+        <td id="role-{{ user.id }}">{{ user.profile.role }}</td>
+        <td>
+          <input type="checkbox" id="is-staff-{{ user.id }}" {% if user.is_staff %}checked{% endif %} onchange="toggleStaff({{ user.id }})" />
+        </td>
+        <td>
+          <input type="checkbox" id="is-active-{{ user.id }}" {% if user.is_active %}checked{% endif %} onchange="toggleActive({{ user.id }})" />
+        </td>
+        <td>
+          <select id="select-role-{{ user.id }}" class="form-select form-select-sm" style="width: auto; display:inline-block;">
+            <option value="candidate" {% if user.profile.role == 'candidate' %}selected{% endif %}>Job Seeker</option>
+            <option value="recruiter" {% if user.profile.role == 'recruiter' %}selected{% endif %}>Recruiter</option>
+          </select>
+          <button class="btn btn-sm btn-primary ms-2" onclick="updateRole({{ user.id }})">Save</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function updateRole(userId) {
+    const select = document.getElementById('select-role-' + userId);
+    const role = select.value;
+    const csrftoken = getCookie('csrftoken');
+
+    fetch('{% url "accounts.update_user_role" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrftoken
+        },
+        body: `user_id=${encodeURIComponent(userId)}&role=${encodeURIComponent(role)}`
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            document.getElementById('role-' + userId).innerText = role;
+            alert('Role updated');
+        } else {
+            alert('Error: ' + (data.error || 'unknown'));
+        }
+    }).catch(err => {
+        console.error(err);
+        alert('Request failed');
+    });
+}
+
+function toggleActive(userId) {
+  const csrftoken = getCookie('csrftoken');
+  const checked = document.getElementById('is-active-' + userId).checked;
+  fetch('{% url "accounts.toggle_user_active" %}', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-CSRFToken': csrftoken
+    },
+    body: `user_id=${encodeURIComponent(userId)}&active=${checked ? 'true' : 'false'}`
+  }).then(r => r.json()).then(data => {
+    if (!data.success) {
+      alert('Error toggling active: ' + (data.error || 'unknown'));
+    }
+  }).catch(err => { console.error(err); alert('Request failed'); });
+}
+
+function toggleStaff(userId) {
+  const csrftoken = getCookie('csrftoken');
+  const checked = document.getElementById('is-staff-' + userId).checked;
+  fetch('{% url "accounts.toggle_user_staff" %}', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-CSRFToken': csrftoken
+    },
+    body: `user_id=${encodeURIComponent(userId)}&staff=${checked ? 'true' : 'false'}`
+  }).then(r => r.json()).then(data => {
+    if (!data.success) {
+      alert('Error toggling staff: ' + (data.error || 'unknown'));
+    }
+  }).catch(err => { console.error(err); alert('Request failed'); });
+}
+</script>
+
+{% endblock %}

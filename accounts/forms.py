@@ -28,15 +28,18 @@ class CustomUserCreationForm(UserCreationForm):
 class PrivacyForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['privacy']
+        # Allow users to update privacy and (free-text) location in the same form
+        fields = ['privacy', 'location']
         widgets = {
-            'privacy': forms.Select(attrs={'class': 'form-control'})
+            'privacy': forms.Select(attrs={'class': 'form-control'}),
+            'location': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'City, state or address'})
         }
 
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['role', 'company', 'headline', 'skills', 'education', 'work_experience', 'portfolio_link', 'linkedin_link', 'github_link', 'other_links']
+        # Expose location at signup/edit time so candidates can provide a location
+        fields = ['role', 'company', 'headline', 'skills', 'education', 'work_experience', 'portfolio_link', 'linkedin_link', 'github_link', 'other_links', 'location']
         widgets = {
             'role': forms.Select(attrs={'class': 'form-control'}),
             'company': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Company name (if you are a recruiter)'}),
@@ -48,6 +51,7 @@ class ProfileForm(forms.ModelForm):
             'linkedin_link': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://linkedin.com/in/yourprofile'}),
             'github_link': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://github.com/yourusername'}),
             'other_links': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Other relevant links (one per line)'}),
+            'location': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'City, state or address'})
         }
         labels = {
             'headline': 'Professional Headline',
