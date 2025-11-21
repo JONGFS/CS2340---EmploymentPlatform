@@ -19,6 +19,10 @@ class Profile(models.Model):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='candidate', null=True)
     company = models.CharField(max_length=100, blank=True, help_text="Company name (if you are a recruiter)")
     
+    location = models.CharField(max_length=255, blank=True, help_text="City, state or address (free text)")
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+
     # Job seeker profile fields
     headline = models.CharField(max_length=200, blank=True, help_text="Professional headline or title")
     skills = models.TextField(blank=True, help_text="List your skills (one per line or comma-separated)")
@@ -31,6 +35,8 @@ class Profile(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s profile"
+    def has_coordinates(self):
+        return self.latitude is not None and self.longitude is not None
     def get_recommended_jobs(self):
         return Job.objects.filter(recommendations__profile=self)
 
