@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+  <h1>Recruiter Dashboard</h1>
+  
+  <div class="row mb-4">
+    <div class="col">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Quick Actions</h5>
+          <a href="{% url 'jobs:index' %}" class="btn btn-primary">Post New Job</a>
+          <a href="{% url 'profiles:candidate_search' %}" class="btn btn-outline-primary">Search Candidates</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <h2>Your Job Postings</h2>
+      {% for job in jobs %}
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">{{ job.title }}</h5>
+          <h6 class="card-subtitle mb-2 text-muted">{{ job.company }}</h6>
+          <p class="card-text">{{ job.location }}</p>
+          
+          {% if job.applications.exists %}
+          <hr>
+          <h6>Recent Applications</h6>
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Candidate</th>
+                  <th>Applied</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for app in job.applications.all|slice:":5" %}
+                <tr>
+                  <td>{{ app.candidate.username }}</td>
+                  <td>{{ app.created_at|date:"Y-m-d" }}</td>
+                  <td>{{ app.get_status_display }}</td>
+                  <td>
+                    <a href="{% url 'profiles:compose_message_to' app.candidate.id %}" class="btn btn-sm btn-outline-primary">Message</a>
+                    <a href="{% url 'profiles:compose_email_to' app.candidate.id %}" class="btn btn-sm btn-outline-secondary">Email</a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% if job.applications.count > 5 %}
+            <div class="text-center">
+              <a href="#" class="btn btn-link">View all {{ job.applications.count }} applications</a>
+            </div>
+            {% endif %}
+          </div>
+          {% else %}
+          <p class="text-muted">No applications yet.</p>
+          {% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <div class="alert alert-info">
+        You haven't posted any jobs yet. 
+  <a href="{% url 'jobs:index' %}" class="alert-link">Create your first job posting</a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h2>Job Map</h2>
+
+<div id="map" style="height: 500px; border-radius: 10px;"></div>
+
+<a href="{% url 'jobs:index' %}" class="btn btn-secondary mt-3">← Back to Jobs</a>
+
+<!-- Custom styles -->
+<style>
+    .location-filter {
+        background: white;
+        padding: 10px;
+        border-radius: 4px;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+    }
+    .current-location-marker {
+        font-size: 25px;
+        color: #007bff;
+    }
+</style>
+
+<!-- Leaflet CSS + JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- Custom JS -->
+<script src="{% static 'jobs/map.js' %}"></script>
+{% endblock %}

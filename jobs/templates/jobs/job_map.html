@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .job-map-header {
+        background-color: #0066cc;
+        padding: 30px 0;
+        margin-bottom: 30px;
+        color: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .job-map-header h1 {
+        font-size: 2rem;
+        font-weight: 600;
+        margin: 0;
+    }
+    
+    .job-map-header p {
+        font-size: 0.95rem;
+        opacity: 0.95;
+        margin: 5px 0 0 0;
+    }
+    
+    .map-wrapper {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin: 30px 0;
+    }
+    
+    #map {
+        height: 550px;
+        width: 100%;
+    }
+    
+    .job-details-card {
+        background: white;
+        border-radius: 8px;
+        padding: 25px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin: 30px 0;
+    }
+    
+    .job-details-card h3 {
+        color: #0066cc;
+        font-size: 1.3rem;
+        margin: 0 0 20px 0;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #0066cc;
+        font-weight: 600;
+    }
+    
+    .detail-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-bottom: 20px;
+    }
+    
+    .detail-row:last-child {
+        margin-bottom: 0;
+    }
+    
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .detail-label {
+        font-size: 0.8rem;
+        color: #666;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+    
+    .detail-value {
+        font-size: 1rem;
+        color: #333;
+        font-weight: 500;
+    }
+    
+    .button-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+    }
+    
+    .btn-back {
+        background-color: #0066cc;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .btn-back:hover {
+        background-color: #0052a3;
+        color: white;
+        text-decoration: none;
+    }
+    
+    @media (max-width: 768px) {
+        .job-map-header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .detail-row {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        #map {
+            height: 400px;
+        }
+    }
+</style>
+
+<div class="job-map-header">
+    <div class="container">
+        <h1>{{ job.title }}</h1>
+        <p>Job Location Map</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="map-wrapper">
+        <div id="map"></div>
+    </div>
+
+    <div class="job-details-card">
+        <h3>Job Details</h3>
+        
+        <div class="detail-row">
+            <div class="detail-item">
+                <span class="detail-label">Location</span>
+                <span class="detail-value">{{ job.location }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Job Title</span>
+                <span class="detail-value">{{ job.title }}</span>
+            </div>
+        </div>
+        
+        <div class="detail-row">
+            <div class="detail-item">
+                <span class="detail-label">Salary Range</span>
+                <span class="detail-value">{{ job.salaryRange }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Remote Status</span>
+                <span class="detail-value">{{ job.remote }}</span>
+            </div>
+        </div>
+        
+        <div class="detail-row">
+            <div class="detail-item">
+                <span class="detail-label">Required Skills</span>
+                <span class="detail-value">{{ job.skills }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Visa Sponsorship</span>
+                <span class="detail-value">
+                    {% if "Yes" in job.visaSponsorship or "yes" in job.visaSponsorship %}
+                        <span style="color: #28a745; font-weight: bold;">Yes</span>
+                    {% else %}
+                        <span style="color: #dc3545; font-weight: bold;">No</span>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <a href="{% url 'jobs:index' %}" class="btn-back">
+                Back to Jobs
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Leaflet CSS + JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- Custom JS -->
+<script>
+    const jobData = {
+        "id": {{ job.id }},
+        "title": "{{ job.title|escapejs }}",
+        "location": "{{ job.location|escapejs }}",
+        "latitude": {{ job.latitude }},
+        "longitude": {{ job.longitude }},
+        "skills": "{{ job.skills|escapejs }}",
+        "salaryRange": "{{ job.salaryRange|escapejs }}",
+        "remote": "{{ job.remote|escapejs }}",
+        "visaSponsorship": "{{ job.visaSponsorship|escapejs }}"
+    };
+</script>
+<script src="{% static 'jobs/job_map.js' %}"></script>
+{% endblock %}

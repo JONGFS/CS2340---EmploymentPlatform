@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Hiring Stages</h2>
+        <div>
+            <a href="{% url 'jobs:index' %}" class="btn btn-outline-primary me-2">Manage Job Listings</a>
+            <a href="{% url 'jobs:index' %}?action=create" class="btn btn-success">Create New Job</a>
+        </div>
+    </div>
+    
+    <div class="row" id="hiring-board">
+        <!-- Applied Column -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Applied</h5>
+                </div>
+                <div class="card-body stage-column" data-stage="APPLIED">
+                    {% for application in applications %}
+                        {% if application.status == 'APPLIED' %}
+                            <div class="card mb-2 application-card" draggable="true" data-id="{{ application.id }}">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ application.applicant_name }}</h6>
+                                    <p class="card-text">
+                                        <small>Job: {{ application.job.title }}</small><br>
+                                        <small>Email: {{ application.applicant_email }}</small>
+                                    </p>
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-outline-primary view-application" data-id="{{ application.id }}">View Details</button>
+                                        <button class="btn btn-sm btn-outline-danger reject-application" data-id="{{ application.id }}">Reject</button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Interviewing Column -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0">Interviewing</h5>
+                </div>
+                <div class="card-body stage-column" data-stage="INTERVIEWING">
+                    {% for application in applications %}
+                        {% if application.status == 'INTERVIEWING' %}
+                            <div class="card mb-2 application-card" draggable="true" data-id="{{ application.id }}">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ application.applicant_name }}</h6>
+                                    <p class="card-text">
+                                        <small>Job: {{ application.job.title }}</small><br>
+                                        <small>Email: {{ application.applicant_email }}</small>
+                                    </p>
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-outline-primary view-application" data-id="{{ application.id }}">View Details</button>
+                                        <button class="btn btn-sm btn-outline-danger reject-application" data-id="{{ application.id }}">Reject</button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Selected Column -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Selected for Position</h5>
+                </div>
+                <div class="card-body stage-column" data-stage="SELECTED">
+                    {% for application in applications %}
+                        {% if application.status == 'SELECTED' %}
+                            <div class="card mb-2 application-card" draggable="true" data-id="{{ application.id }}">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ application.applicant_name }}</h6>
+                                    <p class="card-text">
+                                        <small>Job: {{ application.job.title }}</small><br>
+                                        <small>Email: {{ application.applicant_email }}</small>
+                                    </p>
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-outline-primary view-application" data-id="{{ application.id }}">View Details</button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Application Details Modal -->
+<div class="modal fade" id="applicationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Application Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="applicationDetails"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom CSS -->
+<style>
+.stage-column {
+    min-height: 200px;
+    padding: 10px;
+}
+
+.application-card {
+    cursor: move;
+}
+
+.application-card.dragging {
+    opacity: 0.5;
+}
+
+.stage-column.drag-over {
+    background-color: rgba(0,0,0,0.1);
+}
+</style>
+
+<!-- Custom JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const applicationCards = document.querySelectorAll('.application-card');
+    const stageColumns = document.querySelectorAll('.stage-column');
+    let draggingCard = null;
+
+    // Drag and drop functionality
+    applicationCards.forEach(card => {
+        card.addEventListener('dragstart', function(e) {
+            draggingCard = card;
+            card.classList.add('dragging');
+        });
+
+        card.addEventListener('dragend', function(e) {
+            card.classList.remove('dragging');
+            draggingCard = null;
+        });
+    });
+
+    stageColumns.forEach(column => {
+        column.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            column.classList.add('drag-over');
+        });
+
+        column.addEventListener('dragleave', function(e) {
+            column.classList.remove('drag-over');
+        });
+
+        column.addEventListener('drop', function(e) {
+            e.preventDefault();
+            column.classList.remove('drag-over');
+            if (draggingCard) {
+                const newStage = column.dataset.stage;
+                const applicationId = draggingCard.dataset.id;
+                updateApplicationStage(applicationId, newStage);
+            }
+        });
+    });
+
+    // Handle view application details
+    document.querySelectorAll('.view-application').forEach(button => {
+        button.addEventListener('click', function() {
+            const applicationId = this.dataset.id;
+            fetchApplicationDetails(applicationId);
+        });
+    });
+
+    // Handle reject application
+    document.querySelectorAll('.reject-application').forEach(button => {
+        button.addEventListener('click', function() {
+            if (confirm('Are you sure you want to reject this application?')) {
+                const applicationId = this.dataset.id;
+                updateApplicationStage(applicationId, 'REJECTED');
+            }
+        });
+    });
+
+    // API calls
+    function updateApplicationStage(applicationId, newStage) {
+        fetch(`/jobs/application/${applicationId}/update-stage/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ stage: newStage })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (newStage === 'REJECTED') {
+                    document.querySelector(`.application-card[data-id="${applicationId}"]`).remove();
+                } else {
+                    location.reload(); // Reload to update the UI
+                }
+            } else {
+                alert('Error updating application status');
+            }
+        });
+    }
+
+    function fetchApplicationDetails(applicationId) {
+        fetch(`/jobs/application/${applicationId}/details/`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('applicationDetails').innerHTML = `
+                    <h6>${data.applicant_name}</h6>
+                    <p><strong>Email:</strong> ${data.applicant_email}</p>
+                    <p><strong>Job:</strong> ${data.job_title}</p>
+                    <p><strong>Cover Letter:</strong></p>
+                    <p>${data.cover_letter}</p>
+                `;
+                new bootstrap.Modal(document.getElementById('applicationModal')).show();
+            });
+    }
+
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <h1>Compose Email</h1>
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label class="form-label">To</label>
+      {% if recipient_user %}
+        <div class="form-control-plaintext">{{ recipient_user.username }} &lt;{{ recipient_user.email }}&gt;</div>
+        {{ form.recipient_email.as_hidden }}
+      {% else %}
+        {{ form.recipient_email }}
+      {% endif %}
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Subject</label>
+      {{ form.subject }}
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Message</label>
+      {{ form.body }}
+    </div>
+    <button class="btn btn-primary" type="submit">Send Email</button>
+    <a class="btn btn-secondary" href="{% url 'profiles:candidate_search' %}">Cancel</a>
+  </form>
+</div>
+{% endblock %}
