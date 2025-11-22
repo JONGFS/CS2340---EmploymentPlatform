@@ -50,6 +50,9 @@
               <a class="btn btn-success" href="{% url 'jobs:apply_job' id=job.id %}">Apply</a>
               <a class="btn btn-primary" href="{% url 'jobs:job_map' job_id=job.id %}">View on Map</a>
           {% endif %}
+          {% if user.is_superuser %}
+              <a class="btn btn-danger" href="{% url 'jobs:delete_job' id=job.id %}">Delete</a>
+          {% endif %}
         </div>
 
 
@@ -183,6 +186,9 @@
           {% elif template_data.role == "Job Seeker" %}
               <a class="btn btn-success" href="{% url 'jobs:apply_job' id=job.id %}">Apply</a>
               <a class="btn btn-primary" href="{% url 'jobs:job_map' job_id=job.id %}">View on Map</a>
+          {% endif %}
+          {% if user.is_superuser %}
+              <a class="btn btn-danger" href="{% url 'jobs:delete_job' id=job.id %}">Delete</a>
           {% endif %}
         </div>
 

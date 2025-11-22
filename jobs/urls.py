@@ -7,6 +7,7 @@ app_name = "jobs"
 urlpatterns = [
     path('', views.index, name='index'),
     path('<int:id>/edit/', views.edit_job, name='edit_job'),
+    path('<int:id>/delete/', views.delete_job, name='delete_job'),
     path('<int:id>/apply/', views.apply_job, name='apply_job'),
     path('<int:job_id>/map/', views.job_map_view, name='job_map'),
 
