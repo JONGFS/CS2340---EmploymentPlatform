@@ -82,16 +82,16 @@ def signup(request):
             #if there is a match - this is a new match
             # notify the recruiter in the portal via Messages tab
             if profile.role == 'candidate':  # When job seeker gets added:
+                recruiters_only_dummy_user, is_successful = User.objects.get_or_create(username="recruiter_notification")
                 for job in Job.objects.all():  # loop through each job
                     if is_match(profile, job):
                         Recommendation.objects.get_or_create(profile=profile, job=job)  # create recommendation
                         all_users = User.objects.all()
-                        for curr_user in all_users:
-                            if curr_user.profile.role == 'recruiter' and job.savedCandidateSearch == True:
-                                subject = "New Match Notification"
-                                body = "We found a new match! Job: ", job, " Candidate Match: ", request.POST.get('username')
-                                Message.objects.create(sender=user, recipient=curr_user, subject=subject, body=body)
-            
+                        if job.savedCandidateSearch == True:
+                            subject = "New Match Notification"
+                            body = "We found a new match! Job: ", job, " Candidate Match: ", request.POST.get('username')
+                            Message.objects.create(sender=user, recipient=recruiters_only_dummy_user, subject=subject, body=body)
+        
             return redirect('accounts.login')
         else:
             template_data['user_form'] = user_form
