@@ -140,13 +140,33 @@ LOGIN_URL = '/accounts/login/'
 # Redirect users here after successful login
 LOGIN_REDIRECT_URL = '/jobs/'
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-# SMTP Settings (currently disabled)
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'noreply@employmentplatform.com'
-# EMAIL_HOST_PASSWORD = 'temp'
-DEFAULT_FROM_EMAIL = 'Employment Platform <noreply@employmentplatform.com>'
-EMAIL_SUBJECT_PREFIX = '[Employment Platform] '
+# Email configuration
+# By default we use the console backend for local development. To enable SMTP
+# set EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend and provide
+# the SMTP settings via environment variables (safer than committing secrets).
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+
+if EMAIL_BACKEND == 'django.core.mail.backends.smtp.EmailBackend':
+    # Common SMTP defaults for Gmail; override via environment variables if needed
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+    EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'False') == 'True'
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', f'Employment Platform <{EMAIL_HOST_USER}>')
+else:
+    # Console backend or other non-SMTP backend
+    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'Employment Platform <noreply@employmentplatform.com>')
+
+EMAIL_SUBJECT_PREFIX = os.environ.get('EMAIL_SUBJECT_PREFIX', '[Employment Platform] ')
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = 'team3courseproject@gmail.com'
+EMAIL_HOST_PASSWORD = 'rbjs wmef ypre tfmj'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+EMAIL_USE_LOCALTIME = True

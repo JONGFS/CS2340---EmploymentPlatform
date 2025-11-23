@@ -174,3 +174,5 @@ def compose_email(request, recipient_id=None):
     else:
         form = EmailForm(initial={'recipient_email': recipient_email})
     return render(request, 'compose_email.html', {'form': form, 'recipient_user': recipient_user})
+
+

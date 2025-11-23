@@ -55,7 +55,6 @@ admin.site.unregister(User)
 admin.site.register(User, CustomUserAdmin)
 
 
-@admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'headline', 'role', 'privacy', 'company', 'location')
     search_fields = ('user__username', 'user__email', 'headline', 'skills', 'location', 'company')
@@ -73,3 +72,15 @@ class ProfileAdmin(admin.ModelAdmin):
             'fields': ('portfolio_link', 'linkedin_link', 'github_link', 'other_links')
         }),
     )
+
+# Register ProfileAdmin safely in case admin.autodiscover runs multiple times
+from django.contrib.admin.sites import AlreadyRegistered
+try:
+    admin.site.register(Profile, ProfileAdmin)
+except AlreadyRegistered:
+    # If it's already registered (e.g., imported twice during checks), unregister and reregister
+    try:
+        admin.site.unregister(Profile)
+    except Exception:
+        pass
+    admin.site.register(Profile, ProfileAdmin)

@@ -367,6 +367,49 @@ def applicants_api_view(request):
             })
     return JsonResponse({'candidates': data})
 
+
+from django.core.mail import send_mail
+from django.conf import settings
+
+@login_required
+def email_candidate_view(request, candidate_id):
+    if request.user.profile.role != "recruiter":
+        return HttpResponseForbidden("Only recruiters can send emails")
+
+    candidate = Profile.objects.get(user__id=candidate_id)
+    
+    return render(request, "jobs/email_candidate.html", {
+        "candidate": candidate
+    })
+
+@login_required
+def send_candidate_email(request, candidate_id):
+    if request.user.profile.role != "recruiter":
+        return HttpResponseForbidden("Unauthorized")
+
+    candidate = Profile.objects.get(user__id=candidate_id)
+
+    if request.method == "POST":
+        subject = request.POST.get("subject")
+        message = request.POST.get("message")
+
+        if not subject or not message:
+            return JsonResponse({"success": False, "error": "Missing fields"}, status=400)
+
+        # Send email using your Django email backend
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,   # gmail account
+            [candidate.user.email],        # send TO candidate
+            fail_silently=False,
+        )
+
+        return JsonResponse({"success": True})
+
+    return JsonResponse({"success": False}, status=405)
+
+
 @login_required
 def delete_job(request, id):
     """Delete a job posting - only accessible to superusers."""

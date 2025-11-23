@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Email {{ candidate.user.get_full_name }}</h2>
+
+<form method="POST" action="{% url 'jobs:send_candidate_email' candidate.user.id %}">
+    {% csrf_token %}
+
+    <label>Subject:</label>
+    <input class="form-control" type="text" name="subject" required>
+
+    <label>Message:</label>
+    <textarea class="form-control" name="message" rows="5" required></textarea>
+
+    <button type="submit" class="btn btn-primary mt-3">Send Email</button>
+</form>
+
+{% endblock %}

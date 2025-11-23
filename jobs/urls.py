@@ -20,4 +20,9 @@ urlpatterns = [
 
     path('applicants/map/', views.applicants_map_view, name='applicants_map'),
     path('applicants/api/', views.applicants_api_view, name='applicants_api'),
+
+    path('email/<int:candidate_id>/', views.email_candidate_view, name='email_candidate'),
+    path('email/<int:candidate_id>/send/', views.send_candidate_email, name='send_candidate_email'),
+
+
 ]
