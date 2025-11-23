@@ -225,7 +225,7 @@ def apply_job(request, id):
         app, created = Application.objects.get_or_create(job=job, candidate=request.user, applicant_name=name, applicant_email=email, cover_letter=cover)
         from django.contrib import messages
         messages.success(request, 'Your application has been submitted.')
-        return redirect('jobs.index')
+        return redirect('jobs:index')
     return render(request, 'jobs/apply.html', {'job': job})
 
 def jobs_map_view(request):

@@ -4,6 +4,7 @@ let map;
 let markers = [];
 let currentLocationMarker;
 let radiusCircle;
+const AVERAGE_SPEED_MPH = 35; // used to estimate driving minutes from straight-line miles
 
 document.addEventListener("DOMContentLoaded", function () {
     // Initialize the map
@@ -66,16 +67,42 @@ function loadJobs() {
             data.jobs.forEach((job) => {
                 if (job.latitude && job.longitude) {
                     const marker = L.marker([job.latitude, job.longitude]);
+                    // Initial popup without distance (will be updated when a location filter is applied)
                     marker.bindPopup(
                         `<b>${job.title}</b><br>
                          ${job.location}<br>
                          ${job.salaryRange}<br>
                          Skills: ${job.skills}<br>
                          Remote: ${job.remote}<br>
-                         Visa Sponsorship: ${job.visaSponsorship}`
+                         Visa Sponsorship: ${job.visaSponsorship}<br>
+                         <small class="job-distance">Distance: N/A</small>`
                     );
                     marker.jobData = job; // Store job data with marker
                     markers.push(marker);
+                    // When marker is clicked, if we have a current location, update popup with distance/time
+                    marker.on('click', function () {
+                        if (currentLocationMarker) {
+                            const userLat = currentLocationMarker.getLatLng().lat;
+                            const userLng = currentLocationMarker.getLatLng().lng;
+                            const d = calculateDistance(userLat, userLng, marker.jobData.latitude, marker.jobData.longitude);
+                            const distanceStr = `${d.toFixed(1)} miles`;
+                            const estimatedMinutes = Math.max(1, Math.round((d / AVERAGE_SPEED_MPH) * 60));
+                            const timeStr = `${estimatedMinutes} min`;
+                            const popupHtml = `
+                                <b>${marker.jobData.title}</b><br>
+                                ${marker.jobData.location}<br>
+                                ${marker.jobData.salaryRange}<br>
+                                Skills: ${marker.jobData.skills}<br>
+                                Remote: ${marker.jobData.remote}<br>
+                                Visa Sponsorship: ${marker.jobData.visaSponsorship}<br>
+                                <small class="job-distance">Distance: ${distanceStr} (~${timeStr} drive)</small>
+                            `;
+                            if (marker.getPopup && marker.getPopup()) {
+                                try { marker.getPopup().setContent(popupHtml); }
+                                catch (e) { marker.bindPopup(popupHtml); }
+                            } else { marker.bindPopup(popupHtml); }
+                        }
+                    });
                     marker.addTo(map);
                 }
             });
@@ -155,6 +182,31 @@ function applyFilter(lat, lng, distance) {
   
     markers.forEach(marker => {
         const d = calculateDistance(lat, lng, marker.jobData.latitude, marker.jobData.longitude);
+        // Build a more informative popup including distance (miles) and estimated drive time (minutes)
+        const distanceStr = `${d.toFixed(1)} miles`;
+        const estimatedMinutes = Math.max(1, Math.round((d / AVERAGE_SPEED_MPH) * 60));
+        const timeStr = `${estimatedMinutes} min`;
+        const popupHtml = `
+            <b>${marker.jobData.title}</b><br>
+            ${marker.jobData.location}<br>
+            ${marker.jobData.salaryRange}<br>
+            Skills: ${marker.jobData.skills}<br>
+            Remote: ${marker.jobData.remote}<br>
+            Visa Sponsorship: ${marker.jobData.visaSponsorship}<br>
+            <small class="job-distance">Distance: ${distanceStr} (~${timeStr} drive)</small>
+        `;
+
+        // Update popup content if a popup already exists, otherwise bind a new popup
+        if (marker.getPopup && marker.getPopup()) {
+            try {
+                marker.getPopup().setContent(popupHtml);
+            } catch (e) {
+                marker.bindPopup(popupHtml);
+            }
+        } else {
+            marker.bindPopup(popupHtml);
+        }
+
         if (d <= distance) {
             marker.addTo(map);
         } else {
