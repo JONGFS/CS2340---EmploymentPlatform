@@ -53,11 +53,11 @@ def candidate_search(request):
             job_saved_search = Job.objects.get(id=job_id)
             job_saved_search.savedCandidateSearch = True
             job_saved_search.save()
-    elif 'remove_candidate_search' in request.POST:
-        job_id = request.POST.get('remove_candidate_search')
-        job_saved_search = Job.objects.get(id=job_id)
-        job_saved_search.savedCandidateSearch = False
-        job_saved_search.save()
+        elif 'remove_candidate_search' in request.POST:
+            job_id = request.POST.get('remove_candidate_search')
+            job_saved_search = Job.objects.get(id=job_id)
+            job_saved_search.savedCandidateSearch = False
+            job_saved_search.save()
     # Get recommendations for each job
     seeker_recommendations = []
     for job in Job.objects.all():
@@ -70,12 +70,22 @@ def candidate_search(request):
 
 @login_required
 def inbox(request):
-    msgs = Message.objects.filter(recipient=request.user)\
-        .select_related('sender')\
-        .order_by('-created_at')\
-        .distinct('created_at', 'sender')\
-        .values('id', 'sender', 'subject', 'body', 'created_at', 'sender__username')\
-        .distinct()
+    
+    if request.user.profile.role == "recruiter":
+        msgs = Message.objects.filter(subject="New Match Notification")\
+            .select_related('sender')\
+            .order_by('-created_at')\
+            .distinct('created_at', 'sender')\
+            .values('id', 'sender', 'subject', 'body', 'created_at', 'sender__username')\
+            .distinct()
+    else:
+        msgs = Message.objects.filter(recipient=request.user)\
+            .select_related('sender')\
+            .order_by('-created_at')\
+            .distinct('created_at', 'sender')\
+            .values('id', 'sender', 'subject', 'body', 'created_at', 'sender__username')\
+            .distinct()
+
     
     return render(request, 'message_inbox.html', {
         'message_list': msgs, 
